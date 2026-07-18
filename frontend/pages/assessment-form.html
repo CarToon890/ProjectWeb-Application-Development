@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ประเมินเฟอร์นิเจอร์ — The Disposal Guilt</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #f5f5f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    .logo {
+      font-size: 13px;
+      color: #6b6b6b;
+      margin-bottom: 24px;
+      letter-spacing: 0.04em;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #6b6b6b;
+      margin-bottom: 28px;
+    }
+
+    .field { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #3a3a3a;
+    }
+
+    select, input, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.15s;
+      background: #fff;
+    }
+
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: #3b7dd8;
+    }
+
+    textarea { resize: vertical; min-height: 80px; }
+
+    .condition-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .condition-btn {
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      padding: 10px 8px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 13px;
+      background: #fff;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .condition-btn .emoji { font-size: 20px; display: block; margin-bottom: 4px; }
+    .condition-btn:hover { border-color: #3b7dd8; }
+    .condition-btn.selected { border-color: #3b7dd8; background: #eef4ff; color: #1a52a8; font-weight: 500; }
+
+    /* ซ่อน input จริงไว้ใต้ปุ่ม */
+    input[name="condition"] { display: none; }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 13px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.15s;
+    }
+
+    button[type="submit"]:hover { opacity: 0.85; }
+    button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* แสดง error */
+    #error-msg {
+      display: none;
+      background: #fff0f0;
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #b91c1c;
+      margin-top: 12px;
+    }
+
+    /* แสดงสำเร็จ */
+    #success-msg {
+      display: none;
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 14px;
+      color: #166534;
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    #success-msg strong { display: block; font-size: 16px; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">THE DISPOSAL GUILT</div>
+    <h1>ประเมินของเก่าของคุณ</h1>
+    <p class="subtitle">กรอกข้อมูลเฟอร์นิเจอร์เพื่อรับราคาประเมิน</p>
+
+    <form id="assessment-form">
+
+      <!-- ประเภทเฟอร์นิเจอร์ -->
+      <div class="field">
+        <label for="furniture_type">ประเภทเฟอร์นิเจอร์</label>
+        <select name="furniture_type" id="furniture_type" required>
+          <option value="">เลือกประเภท...</option>
+          <option value="sofa">โซฟา</option>
+          <option value="table">โต๊ะ</option>
+          <option value="chair">เก้าอี้</option>
+          <option value="bed">เตียง</option>
+          <option value="wardrobe">ตู้เสื้อผ้า</option>
+          <option value="shelf">ชั้นวางของ</option>
+          <option value="other">อื่นๆ</option>
+        </select>
+      </div>
+
+      <!-- สภาพ -->
+      <div class="field">
+        <label>สภาพสินค้า</label>
+        <div class="condition-grid">
+          <div class="condition-btn" onclick="selectCondition('good', this)">
+            <span class="emoji">😊</span>ดี
+          </div>
+          <div class="condition-btn" onclick="selectCondition('fair', this)">
+            <span class="emoji">😐</span>พอใช้
+          </div>
+          <div class="condition-btn" onclick="selectCondition('poor', this)">
+            <span class="emoji">😔</span>ทรุดโทรม
+          </div>
+        </div>
+        <!-- input ซ่อน เก็บค่าจริง -->
+        <input type="text" name="condition" id="condition" required />
+      </div>
+
+      <!-- รายละเอียด -->
+      <div class="field">
+        <label for="description">รายละเอียดเพิ่มเติม (ไม่บังคับ)</label>
+        <textarea name="description" id="description"
+          placeholder="เช่น โซฟา 3 ที่นั่ง สีเทา ขาไม้ ใช้มา 5 ปี"></textarea>
+      </div>
+
+      <button type="submit" id="submit-btn">ส่งข้อมูลประเมิน</button>
+
+      <div id="error-msg"></div>
+      <div id="success-msg"></div>
+    </form>
+  </div>
+
+  <!-- โหลด api.js ก่อน (มีฟังก์ชัน createItem) -->
+  <script src="../js/api.js"></script>
+  <script>
+    // เลือกสภาพ: อัพเดต class ปุ่ม + ค่าใน input ซ่อน
+    function selectCondition(value, el) {
+      document.querySelectorAll('.condition-btn').forEach(b => b.classList.remove('selected'))
+      el.classList.add('selected')
+      document.getElementById('condition').value = value
+    }
+
+    const form = document.getElementById('assessment-form')
+    const submitBtn = document.getElementById('submit-btn')
+    const errorMsg = document.getElementById('error-msg')
+    const successMsg = document.getElementById('success-msg')
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      // ซ่อน error เก่า
+      errorMsg.style.display = 'none'
+      successMsg.style.display = 'none'
+
+      // ตรวจว่าเลือกสภาพแล้วหรือยัง
+      const condition = document.getElementById('condition').value
+      if (!condition) {
+        errorMsg.textContent = 'กรุณาเลือกสภาพสินค้าก่อน'
+        errorMsg.style.display = 'block'
+        return
+      }
+
+      // เปลี่ยนปุ่มเป็น loading
+      submitBtn.disabled = true
+      submitBtn.textContent = 'กำลังส่ง...'
+
+      try {
+        // เรียก POST /api/items ผ่าน api.js
+        const item = await createItem({
+          furniture_type: form.furniture_type.value,
+          condition: condition,
+          description: form.description.value || null,
+        })
+
+        // สำเร็จ — แสดง item id และไปหน้า booking
+        successMsg.innerHTML = `
+          <strong>ส่งข้อมูลสำเร็จ! 🎉</strong>
+          รหัสรายการของคุณ: <code>#${item.id}</code><br>
+          <small>กำลังพาไปเลือกวันนัด...</small>
+        `
+        successMsg.style.display = 'block'
+
+        // รอ 1.5 วิ แล้ว redirect พร้อม item_id
+        setTimeout(() => {
+          location.href = `select-datetime.html?item_id=${item.id}`
+        }, 1500)
+
+      } catch (err) {
+        // แสดง error บนหน้า
+        errorMsg.textContent = `ส่งข้อมูลไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = 'block'
+        submitBtn.disabled = false
+        submitBtn.textContent = 'ส่งข้อมูลประเมิน'
+      }
+    })
+  </script>
+</body>
+</html>
