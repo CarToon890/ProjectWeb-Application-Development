@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eco Dashboard — The Disposal Guilt</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #f5f5f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      padding: 14px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    nav .logo { font-size: 13px; color: #6b6b6b; letter-spacing: 0.04em; }
+    nav .links { display: flex; gap: 18px; align-items: center; font-size: 13px; }
+    nav .links a { color: #3a3a3a; text-decoration: none; }
+    nav .links a:hover { color: #3b7dd8; }
+    nav button {
+      background: none; border: none; font-size: 13px; color: #b91c1c; cursor: pointer; font-family: inherit;
+    }
+
+    .container { max-width: 720px; margin: 0 auto; padding: 32px 24px; }
+
+    h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+    .subtitle { font-size: 14px; color: #6b6b6b; margin-bottom: 24px; }
+
+    .section-title { font-size: 15px; font-weight: 600; margin: 28px 0 12px; }
+
+    .stat-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      flex: 1;
+      min-width: 160px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+    .stat-value { font-size: 26px; font-weight: 700; color: #16a34a; }
+    .stat-label { font-size: 12px; color: #6b6b6b; margin-top: 4px; }
+
+    .category-list {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .category-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .category-row:last-child { margin-bottom: 0; }
+    .category-name { width: 90px; flex-shrink: 0; color: #3a3a3a; }
+    .bar-track { flex: 1; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; background: #16a34a; }
+    .category-count { width: 32px; text-align: right; font-weight: 500; flex-shrink: 0; }
+
+    .empty { font-size: 13px; color: #9a9a9a; padding: 12px 0; }
+
+    .share-btn {
+      margin-top: 24px;
+      padding: 12px 24px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .share-btn:hover { opacity: 0.85; }
+
+    #error-msg {
+      display: none;
+      background: #fff0f0;
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #b91c1c;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">THE DISPOSAL GUILT</div>
+    <div class="links">
+      <a href="../index.html">หน้าแรก</a>
+      <a href="assessment-form.html">ประเมินของเก่า</a>
+      <a href="profile.html">โปรไฟล์</a>
+      <button onclick="handleLogout()">ออกจากระบบ</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Eco Dashboard</h1>
+    <p class="subtitle">ผลลัพธ์เชิงสิ่งแวดล้อมจากการส่งต่อของเก่าแทนการทิ้ง</p>
+
+    <div class="section-title">ของคุณ</div>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-value" id="me-items">-</div>
+        <div class="stat-label">ชิ้นที่ส่งต่อแล้ว</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="me-co2">-</div>
+        <div class="stat-label">กก. CO₂ ที่ประหยัดได้</div>
+      </div>
+    </div>
+    <div class="category-list" id="me-categories" style="margin-top: 14px;"></div>
+
+    <div class="section-title">รวมทั้งระบบ</div>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-value" id="total-items">-</div>
+        <div class="stat-label">ชิ้นที่ส่งต่อแล้ว</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-co2">-</div>
+        <div class="stat-label">กก. CO₂ ที่ประหยัดได้</div>
+      </div>
+    </div>
+    <div class="category-list" id="total-categories" style="margin-top: 14px;"></div>
+
+    <button class="share-btn" id="share-btn">แชร์ผลลัพธ์ของฉัน</button>
+    <div id="error-msg"></div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    requireLogin()
+
+    const CATEGORY_LABEL = {
+      sofa: 'โซฟา', table: 'โต๊ะ', chair: 'เก้าอี้', bed: 'เตียง',
+      wardrobe: 'ตู้เสื้อผ้า', shelf: 'ชั้นวางของ', other: 'อื่นๆ',
+    }
+
+    function renderCategories(container, byCategory) {
+      const entries = Object.entries(byCategory)
+      if (entries.length === 0) {
+        container.innerHTML = '<div class="empty">ยังไม่มีข้อมูล</div>'
+        return
+      }
+      const max = Math.max(...entries.map(([, count]) => count))
+      container.innerHTML = entries.map(([cat, count]) => `
+        <div class="category-row">
+          <div class="category-name">${CATEGORY_LABEL[cat] || cat}</div>
+          <div class="bar-track"><div class="bar-fill" style="width: ${(count / max) * 100}%"></div></div>
+          <div class="category-count">${count}</div>
+        </div>
+      `).join('')
+    }
+
+    let meStats = null
+
+    async function load() {
+      try {
+        const [me, total] = await Promise.all([getEcoStatsMe(), getEcoStats()])
+        meStats = me
+
+        document.getElementById('me-items').textContent = me.total_items
+        document.getElementById('me-co2').textContent = me.total_co2_saved_kg.toFixed(1)
+        renderCategories(document.getElementById('me-categories'), me.by_category)
+
+        document.getElementById('total-items').textContent = total.total_items
+        document.getElementById('total-co2').textContent = total.total_co2_saved_kg.toFixed(1)
+        renderCategories(document.getElementById('total-categories'), total.by_category)
+      } catch (err) {
+        document.getElementById('error-msg').textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
+        document.getElementById('error-msg').style.display = 'block'
+      }
+    }
+
+    document.getElementById('share-btn').addEventListener('click', async () => {
+      const text = meStats
+        ? `ฉันช่วยลดขยะไปแล้ว ${meStats.total_items} ชิ้น ประหยัด CO₂ ได้ ${meStats.total_co2_saved_kg.toFixed(1)} กก. กับ The Disposal Guilt!`
+        : 'ผลลัพธ์เชิงสิ่งแวดล้อมของฉันกับ The Disposal Guilt'
+
+      if (navigator.share) {
+        try { await navigator.share({ text }) } catch (e) { /* ผู้ใช้ปิด share sheet เอง ไม่ต้องแจ้ง error */ }
+      } else {
+        try {
+          await navigator.clipboard.writeText(text)
+          alert('คัดลอกข้อความสำหรับแชร์แล้ว')
+        } catch (e) {
+          alert(text)
+        }
+      }
+    })
+
+    load()
+  </script>
+</body>
+</html>

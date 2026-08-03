@@ -245,17 +245,17 @@
           description: form.description.value || null,
         })
 
-        // สำเร็จ — แสดง item id และไปหน้า booking
+        // สำเร็จ — แสดงราคาประเมินและไปหน้าเลือกของใหม่
         successMsg.innerHTML = `
           <strong>ส่งข้อมูลสำเร็จ! 🎉</strong>
-          รหัสรายการของคุณ: <code>#${item.id}</code><br>
-          <small>กำลังพาไปเลือกวันนัด...</small>
+          ราคาประเมิน: <code>${item.estimated_price.toLocaleString()} บาท</code><br>
+          <small>กำลังพาไปเลือกของใหม่...</small>
         `
         successMsg.style.display = 'block'
 
-        // รอ 1.5 วิ แล้ว redirect พร้อม item_id
+        // รอ 1.5 วิ แล้ว redirect พร้อม item_id ไปหน้าเลือกของใหม่ (Step 2)
         setTimeout(() => {
-          location.href = `select-datetime.html?item_id=${item.id}`
+          location.href = `products.html?item_id=${item.id}`
         }, 1500)
 
       } catch (err) {

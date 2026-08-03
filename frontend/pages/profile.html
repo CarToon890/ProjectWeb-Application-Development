@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>โปรไฟล์ — The Disposal Guilt</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #f5f5f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      padding: 14px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    nav .logo { font-size: 13px; color: #6b6b6b; letter-spacing: 0.04em; }
+    nav .links { display: flex; gap: 18px; align-items: center; font-size: 13px; }
+    nav .links a { color: #3a3a3a; text-decoration: none; }
+    nav .links a:hover { color: #3b7dd8; }
+    nav button {
+      background: none; border: none; font-size: 13px; color: #b91c1c; cursor: pointer; font-family: inherit;
+    }
+
+    .container { max-width: 520px; margin: 0 auto; padding: 32px 24px; }
+
+    h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+    .subtitle { font-size: 14px; color: #6b6b6b; margin-bottom: 20px; }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      margin-bottom: 18px;
+    }
+
+    .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+
+    .field { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #3a3a3a;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+    }
+    input:focus { outline: none; border-color: #3b7dd8; }
+    input:disabled { background: #f5f5f0; color: #9a9a9a; }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 12px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    button[type="submit"]:hover { opacity: 0.85; }
+    button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .msg {
+      display: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+    .msg.error { background: #fff0f0; border: 1px solid #fca5a5; color: #b91c1c; }
+    .msg.success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">THE DISPOSAL GUILT</div>
+    <div class="links">
+      <a href="../index.html">หน้าแรก</a>
+      <a href="assessment-form.html">ประเมินของเก่า</a>
+      <a href="eco-dashboard.html">Eco Dashboard</a>
+      <button onclick="handleLogout()">ออกจากระบบ</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>โปรไฟล์</h1>
+    <p class="subtitle">แก้ไขข้อมูลส่วนตัวและรหัสผ่านของคุณ</p>
+
+    <form id="profile-form" class="card">
+      <h2>ข้อมูลส่วนตัว</h2>
+
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" disabled />
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" required />
+      </div>
+
+      <div class="field">
+        <label for="full_name">ชื่อ-นามสกุล</label>
+        <input type="text" name="full_name" id="full_name" required />
+      </div>
+
+      <div class="field">
+        <label for="phone">เบอร์โทร</label>
+        <input type="tel" name="phone" id="phone" />
+      </div>
+
+      <div class="field">
+        <label for="address">ที่อยู่</label>
+        <input type="text" name="address" id="address" />
+      </div>
+
+      <button type="submit" id="save-btn">บันทึกข้อมูล</button>
+      <div class="msg error" id="profile-error"></div>
+      <div class="msg success" id="profile-success"></div>
+    </form>
+
+    <form id="password-form" class="card">
+      <h2>เปลี่ยนรหัสผ่าน</h2>
+
+      <div class="field">
+        <label for="old_password">รหัสผ่านเดิม</label>
+        <input type="password" name="old_password" id="old_password" required autocomplete="current-password" />
+      </div>
+
+      <div class="field">
+        <label for="new_password">รหัสผ่านใหม่</label>
+        <input type="password" name="new_password" id="new_password" required minlength="6" autocomplete="new-password" />
+      </div>
+
+      <button type="submit" id="password-btn">เปลี่ยนรหัสผ่าน</button>
+      <div class="msg error" id="password-error"></div>
+      <div class="msg success" id="password-success"></div>
+    </form>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    requireLogin()
+
+    let currentUserId = null
+    const profileForm = document.getElementById('profile-form')
+    const saveBtn = document.getElementById('save-btn')
+    const profileError = document.getElementById('profile-error')
+    const profileSuccess = document.getElementById('profile-success')
+
+    async function loadProfile() {
+      try {
+        const me = await getMe()
+        currentUserId = me.id
+        document.getElementById('username').value = me.username
+        document.getElementById('email').value = me.email
+        document.getElementById('full_name').value = me.full_name
+        document.getElementById('phone').value = me.phone || ''
+        document.getElementById('address').value = me.address || ''
+      } catch (err) {
+        profileError.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
+        profileError.style.display = 'block'
+      }
+    }
+
+    profileForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      profileError.style.display = 'none'
+      profileSuccess.style.display = 'none'
+      saveBtn.disabled = true
+
+      try {
+        await updateUser(currentUserId, {
+          email: profileForm.email.value.trim(),
+          full_name: profileForm.full_name.value.trim(),
+          phone: profileForm.phone.value.trim() || null,
+          address: profileForm.address.value.trim() || null,
+        })
+        profileSuccess.textContent = 'บันทึกข้อมูลสำเร็จ'
+        profileSuccess.style.display = 'block'
+      } catch (err) {
+        profileError.textContent = `บันทึกไม่สำเร็จ: ${err.message}`
+        profileError.style.display = 'block'
+      } finally {
+        saveBtn.disabled = false
+      }
+    })
+
+    const passwordForm = document.getElementById('password-form')
+    const passwordBtn = document.getElementById('password-btn')
+    const passwordError = document.getElementById('password-error')
+    const passwordSuccess = document.getElementById('password-success')
+
+    passwordForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      passwordError.style.display = 'none'
+      passwordSuccess.style.display = 'none'
+      passwordBtn.disabled = true
+
+      try {
+        await changePassword(passwordForm.old_password.value, passwordForm.new_password.value)
+        passwordSuccess.textContent = 'เปลี่ยนรหัสผ่านสำเร็จ'
+        passwordSuccess.style.display = 'block'
+        passwordForm.reset()
+      } catch (err) {
+        passwordError.textContent = `เปลี่ยนรหัสผ่านไม่สำเร็จ: ${err.message}`
+        passwordError.style.display = 'block'
+      } finally {
+        passwordBtn.disabled = false
+      }
+    })
+
+    loadProfile()
+  </script>
+</body>
+</html>
