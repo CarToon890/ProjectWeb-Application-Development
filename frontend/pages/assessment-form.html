@@ -199,9 +199,13 @@
     </form>
   </div>
 
-  <!-- โหลด api.js ก่อน (มีฟังก์ชัน createItem) -->
+  <!-- โหลด api.js ก่อน (มีฟังก์ชัน createItem) แล้วค่อย auth.js (มี requireLogin) -->
   <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
   <script>
+    // หน้านี้ต้องล็อกอินก่อนใช้งาน — ไม่มี token ให้เด้งไปหน้า login
+    requireLogin()
+
     // เลือกสภาพ: อัพเดต class ปุ่ม + ค่าใน input ซ่อน
     function selectCondition(value, el) {
       document.querySelectorAll('.condition-btn').forEach(b => b.classList.remove('selected'))

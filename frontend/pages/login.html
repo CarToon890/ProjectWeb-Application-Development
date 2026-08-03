@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>เข้าสู่ระบบ — The Disposal Guilt</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #f5f5f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    .logo {
+      font-size: 13px;
+      color: #6b6b6b;
+      margin-bottom: 24px;
+      letter-spacing: 0.04em;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #6b6b6b;
+      margin-bottom: 28px;
+    }
+
+    .field { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #3a3a3a;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.15s;
+      background: #fff;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #3b7dd8;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 13px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.15s;
+    }
+
+    button[type="submit"]:hover { opacity: 0.85; }
+    button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #error-msg {
+      display: none;
+      background: #fff0f0;
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #b91c1c;
+      margin-top: 12px;
+    }
+
+    .register-link {
+      text-align: center;
+      font-size: 13px;
+      color: #6b6b6b;
+      margin-top: 18px;
+    }
+    .register-link a { color: #3b7dd8; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">THE DISPOSAL GUILT</div>
+    <h1>เข้าสู่ระบบ</h1>
+    <p class="subtitle">เข้าสู่ระบบเพื่อประเมินของเก่าของคุณ</p>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" name="username" id="username" required autocomplete="username" autofocus />
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" required autocomplete="current-password" />
+      </div>
+
+      <button type="submit" id="submit-btn">เข้าสู่ระบบ</button>
+
+      <div id="error-msg"></div>
+    </form>
+
+    <div class="register-link">
+      ยังไม่มีบัญชี? <a href="register.html">สมัครสมาชิก</a>
+    </div>
+  </div>
+
+  <!-- โหลด api.js ก่อน แล้วค่อย auth.js (มีฟังก์ชัน saveToken) -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    const form = document.getElementById('login-form')
+    const submitBtn = document.getElementById('submit-btn')
+    const errorMsg = document.getElementById('error-msg')
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      errorMsg.style.display = 'none'
+      submitBtn.disabled = true
+      submitBtn.textContent = 'กำลังเข้าสู่ระบบ...'
+
+      try {
+        const { access_token } = await login(form.username.value.trim(), form.password.value)
+        saveToken(access_token)
+        location.href = 'assessment-form.html'
+      } catch (err) {
+        errorMsg.textContent = `เข้าสู่ระบบไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = 'block'
+        submitBtn.disabled = false
+        submitBtn.textContent = 'เข้าสู่ระบบ'
+      }
+    })
+  </script>
+</body>
+</html>

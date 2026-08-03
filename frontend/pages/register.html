@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>สมัครสมาชิก — The Disposal Guilt</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #f5f5f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    .logo {
+      font-size: 13px;
+      color: #6b6b6b;
+      margin-bottom: 24px;
+      letter-spacing: 0.04em;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #6b6b6b;
+      margin-bottom: 28px;
+    }
+
+    .field { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #3a3a3a;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.15s;
+      background: #fff;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #3b7dd8;
+    }
+
+    input.invalid { border-color: #dc2626; }
+    input.valid { border-color: #16a34a; }
+
+    #username-hint {
+      font-size: 12px;
+      margin-top: 4px;
+      min-height: 16px;
+    }
+    #username-hint.available { color: #16a34a; }
+    #username-hint.taken { color: #dc2626; }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 13px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.15s;
+    }
+
+    button[type="submit"]:hover { opacity: 0.85; }
+    button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #error-msg {
+      display: none;
+      background: #fff0f0;
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #b91c1c;
+      margin-top: 12px;
+    }
+
+    .login-link {
+      text-align: center;
+      font-size: 13px;
+      color: #6b6b6b;
+      margin-top: 18px;
+    }
+    .login-link a { color: #3b7dd8; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">THE DISPOSAL GUILT</div>
+    <h1>สมัครสมาชิก</h1>
+    <p class="subtitle">สร้างบัญชีเพื่อเริ่มประเมินของเก่าของคุณ</p>
+
+    <form id="register-form">
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" name="username" id="username" required autocomplete="username" />
+        <div id="username-hint"></div>
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" required autocomplete="email" />
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" required minlength="6" autocomplete="new-password" />
+      </div>
+
+      <div class="field">
+        <label for="full_name">ชื่อ-นามสกุล</label>
+        <input type="text" name="full_name" id="full_name" required autocomplete="name" />
+      </div>
+
+      <div class="field">
+        <label for="phone">เบอร์โทร (ไม่บังคับ)</label>
+        <input type="tel" name="phone" id="phone" autocomplete="tel" />
+      </div>
+
+      <div class="field">
+        <label for="address">ที่อยู่ (ไม่บังคับ)</label>
+        <input type="text" name="address" id="address" autocomplete="street-address" />
+      </div>
+
+      <button type="submit" id="submit-btn">สมัครสมาชิก</button>
+
+      <div id="error-msg"></div>
+    </form>
+
+    <div class="login-link">
+      มีบัญชีอยู่แล้ว? <a href="login.html">เข้าสู่ระบบ</a>
+    </div>
+  </div>
+
+  <!-- โหลด api.js ก่อน (มีฟังก์ชัน register, checkUsername) -->
+  <script src="../js/api.js"></script>
+  <script>
+    const usernameInput = document.getElementById('username')
+    const usernameHint = document.getElementById('username-hint')
+
+    // เช็ค username ว่างไหมแบบ real-time ตอน blur
+    usernameInput.addEventListener('blur', async () => {
+      const name = usernameInput.value.trim()
+      if (!name) {
+        usernameHint.textContent = ''
+        usernameHint.className = ''
+        usernameInput.classList.remove('valid', 'invalid')
+        return
+      }
+      try {
+        const result = await checkUsername(name)
+        if (result.available) {
+          usernameHint.textContent = 'username นี้ใช้ได้'
+          usernameHint.className = 'available'
+          usernameInput.classList.remove('invalid')
+          usernameInput.classList.add('valid')
+        } else {
+          usernameHint.textContent = 'username นี้ถูกใช้ไปแล้ว'
+          usernameHint.className = 'taken'
+          usernameInput.classList.remove('valid')
+          usernameInput.classList.add('invalid')
+        }
+      } catch (e) {
+        // เช็คไม่ได้ก็ปล่อยผ่าน ให้ backend ตัดสินตอน submit
+      }
+    })
+
+    const form = document.getElementById('register-form')
+    const submitBtn = document.getElementById('submit-btn')
+    const errorMsg = document.getElementById('error-msg')
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      errorMsg.style.display = 'none'
+      submitBtn.disabled = true
+      submitBtn.textContent = 'กำลังสมัคร...'
+
+      try {
+        await register({
+          username: form.username.value.trim(),
+          email: form.email.value.trim(),
+          password: form.password.value,
+          full_name: form.full_name.value.trim(),
+          phone: form.phone.value.trim() || null,
+          address: form.address.value.trim() || null,
+        })
+
+        // สมัครสำเร็จ → ไปหน้า login
+        location.href = 'login.html'
+      } catch (err) {
+        errorMsg.textContent = `สมัครไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = 'block'
+        submitBtn.disabled = false
+        submitBtn.textContent = 'สมัครสมาชิก'
+      }
+    })
+  </script>
+</body>
+</html>
