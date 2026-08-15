@@ -89,6 +89,7 @@
     <div class="discount-banner" id="discount-banner" style="display: none;"></div>
     <div class="msg msg-error" id="error-msg"></div>
     <div class="msg-empty" id="empty-msg" style="padding: 10px 14px; border-radius: 8px;">ไม่พบสินค้าในหมวดนี้</div>
+    <div class="empty-state" id="loading-msg">กำลังโหลดสินค้า...</div>
 
     <div class="category-filter" id="category-filter"></div>
     <div class="grid" id="product-grid"></div>
@@ -106,6 +107,7 @@
     const itemId = params.get('item_id') || getFlow().item_id
     const errorMsg = document.getElementById('error-msg')
     const emptyMsg = document.getElementById('empty-msg')
+    const loadingMsg = document.getElementById('loading-msg')
     const grid = document.getElementById('product-grid')
     const banner = document.getElementById('discount-banner')
     const categoryFilter = document.getElementById('category-filter')
@@ -171,11 +173,14 @@
     }
 
     async function loadProducts(category) {
+      loadingMsg.style.display = 'block'
       try {
         const products = await getProducts(category || undefined)
         renderProducts(products)
       } catch (err) {
         showError(`โหลดสินค้าไม่สำเร็จ: ${err.message}`)
+      } finally {
+        loadingMsg.style.display = 'none'
       }
     }
 

@@ -14,6 +14,15 @@ async function apiFetch(path, options = {}) {
   if (token) headers["Authorization"] = `Bearer ${token}`
 
   const res = await fetch(BASE_URL + path, { ...options, headers })
+
+  // token หมดอายุ/ใช้ไม่ได้แล้ว — เคลียร์แล้วเด้งกลับ login ทันทีทุกหน้าที่โหลด auth.js ไว้
+  // เช็ค typeof เพราะบางหน้า (เช่น register.html) โหลดแค่ api.js ไม่มี auth.js
+  if (res.status === 401 && token) {
+    if (typeof clearToken === "function") clearToken()
+    if (typeof requireLogin === "function") requireLogin()
+    throw new Error("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่")
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail || `Error ${res.status}`)

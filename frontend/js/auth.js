@@ -67,8 +67,11 @@ async function requireRole(role) {
       currentRole = me.role
       cacheRole(currentRole)
     } catch (e) {
-      // token หมดอายุหรือเรียกไม่ได้ — ถือว่ายืนยันตัวตนไม่ผ่าน
-      await handleLogout()
+      // ถ้าเป็น 401 apiFetch() จะเคลียร์ token + เด้งไป login (พร้อม next) ให้เองแล้ว
+      // เช็ค isLoggedIn() กันไม่ให้ handleLogout() ยิง redirect ซ้อนทับจนหลุด next param
+      if (isLoggedIn()) {
+        await handleLogout()
+      }
       return
     }
   }

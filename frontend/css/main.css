@@ -171,7 +171,7 @@ input.invalid { border-color: var(--danger-2); }
 }
 .msg-error { background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger); }
 .msg-success { background: var(--ok-bg); border: 1px solid var(--ok-border); color: var(--ok-ink); }
-.msg-empty { background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+.msg-empty { display: none; background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
 
 /* ---------- Badge ---------- */
 .badge {

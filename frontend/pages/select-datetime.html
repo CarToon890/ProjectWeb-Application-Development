@@ -42,6 +42,7 @@
     <p class="subtitle">รอบเดียวจบ: ช่างจะมารับของเก่าและส่งของใหม่พร้อมกันในนัดหมายเดียว</p>
 
     <div class="card">
+      <div class="empty-state" id="loading-msg">กำลังโหลดช่วงเวลา...</div>
       <div id="slots-wrap"></div>
       <div class="msg-empty" id="empty-msg">ไม่มีช่วงเวลาว่างในตอนนี้ ลองกลับมาดูใหม่ภายหลัง</div>
     </div>
@@ -65,6 +66,7 @@
 
     const slotsWrap = document.getElementById('slots-wrap')
     const emptyMsg = document.getElementById('empty-msg')
+    const loadingMsg = document.getElementById('loading-msg')
     const nextBtn = document.getElementById('next-btn')
     const errorMsg = document.getElementById('error-msg')
 
@@ -87,6 +89,8 @@
 
     async function loadSlots() {
       errorMsg.style.display = 'none'
+      emptyMsg.style.display = 'none'
+      loadingMsg.style.display = 'block'
       slotsWrap.innerHTML = ''
       selectedSlotId = null
       nextBtn.disabled = true
@@ -98,6 +102,8 @@
         errorMsg.textContent = `โหลดช่วงเวลาไม่สำเร็จ: ${err.message}`
         errorMsg.style.display = 'block'
         return
+      } finally {
+        loadingMsg.style.display = 'none'
       }
 
       // กันเวลาที่ผ่านไปแล้วอีกชั้นฝั่ง frontend เผื่อ clock ไม่ตรงกัน
