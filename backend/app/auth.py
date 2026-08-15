@@ -52,7 +52,18 @@ def get_current_user(
     return user
 
 
-def get_current_admin(user: User = Depends(get_current_user)) -> User:
-    if user.role != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="ต้องเป็น admin เท่านั้น")
-    return user
+def require_roles(*roles: str):
+    def dependency(user: User = Depends(get_current_user)) -> User:
+        if user.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"ต้องเป็น {' หรือ '.join(roles)} เท่านั้น",
+            )
+        return user
+
+    return dependency
+
+
+get_current_admin = require_roles("admin")
+# staff ทำงานหน้างานได้เหมือน admin ในส่วนที่เกี่ยวกับสถานะการจอง
+get_current_staff = require_roles("staff", "admin")

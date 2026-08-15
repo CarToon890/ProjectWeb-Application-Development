@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>จัดการการจอง — Admin</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <style>
+    .status-filter { margin-bottom: 18px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .status-filter button {
+      padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 20px;
+      background: var(--surface); font-size: 12px; cursor: pointer; font-family: inherit;
+    }
+    .status-filter button.active { border-color: var(--ink); background: var(--ink); color: #fff; }
+
+    .warning-banner {
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--accent-ink);
+      margin-bottom: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app-nav"></div>
+
+  <div class="container container-lg">
+    <h1>จัดการการจอง</h1>
+    <p class="subtitle">การจองทั้งหมดในระบบ</p>
+
+    <div class="warning-banner">
+      ⚠️ เปลี่ยนสถานะเป็น <strong>กำลังขนส่ง</strong> จะดันสถานะของเก่าเป็น "รับของแล้ว" และ <strong>เสร็จสิ้น</strong> จะดันเป็น "ส่งต่อสำเร็จ" โดยอัตโนมัติ
+    </div>
+
+    <div class="status-filter" id="status-filter"></div>
+    <div class="msg msg-error" id="error-msg"></div>
+
+    <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
+    <div class="table-wrap" id="table-wrap" style="display: none;">
+      <table class="data-table">
+        <thead>
+          <tr><th>#</th><th>ลูกค้า</th><th>ของเก่า</th><th>ของใหม่</th><th>ยอดรวม</th><th>สถานะ</th><th>เปลี่ยนสถานะ</th></tr>
+        </thead>
+        <tbody id="bookings-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    ;(async () => {
+      await requireRole("admin")
+      renderNav({ root: "../", dir: "admin", active: "a-bookings" })
+      load()
+    })()
+
+    const STATUSES = ["pending", "confirmed", "in_transit", "completed", "cancelled"]
+    const STATUS_LABEL = {
+      pending: "รอยืนยัน", confirmed: "ยืนยันแล้ว", in_transit: "กำลังขนส่ง",
+      completed: "เสร็จสิ้น", cancelled: "ยกเลิกแล้ว",
+    }
+    const STATUS_BADGE_CLASS = {
+      pending: "badge-muted", confirmed: "badge-accent", in_transit: "badge-accent",
+      completed: "badge-ok", cancelled: "badge-danger",
+    }
+    const STATUS_FILTERS = [["", "ทั้งหมด"], ...STATUSES.map((s) => [s, STATUS_LABEL[s]])]
+    const FURNITURE_LABEL = {
+      sofa: "โซฟา", table: "โต๊ะ", chair: "เก้าอี้", bed: "เตียง",
+      wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ", other: "อื่นๆ",
+    }
+
+    const loadingMsg = document.getElementById("loading-msg")
+    const errorMsg = document.getElementById("error-msg")
+    const tableWrap = document.getElementById("table-wrap")
+    const tbody = document.getElementById("bookings-body")
+    const statusFilter = document.getElementById("status-filter")
+
+    let allBookings = []
+    let activeStatus = ""
+
+    function renderRows() {
+      const rows = activeStatus ? allBookings.filter((b) => b.status === activeStatus) : allBookings
+      tbody.innerHTML = rows.map((b) => `
+        <tr>
+          <td>#${b.id}</td>
+          <td>${b.user.full_name}</td>
+          <td>${FURNITURE_LABEL[b.item.furniture_type] || b.item.furniture_type}</td>
+          <td>${b.product ? b.product.name : "-"}</td>
+          <td>${b.total_price.toLocaleString()} บาท</td>
+          <td><span class="badge ${STATUS_BADGE_CLASS[b.status] || "badge-muted"}">${STATUS_LABEL[b.status] || b.status}</span></td>
+          <td>
+            <select class="inline-select" data-id="${b.id}">
+              ${STATUSES.map((s) => `<option value="${s}" ${s === b.status ? "selected" : ""}>${STATUS_LABEL[s]}</option>`).join("")}
+            </select>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="7" style="text-align:center; color:var(--muted-2);">ไม่มีการจองในหมวดนี้</td></tr>`
+
+      tbody.querySelectorAll("select.inline-select").forEach((select) => {
+        select.addEventListener("change", async () => {
+          const id = Number(select.dataset.id)
+          const newStatus = select.value
+          select.disabled = true
+          try {
+            await updateBookingStatus(id, newStatus)
+            toast("อัปเดตสถานะสำเร็จ", "success")
+            await load()
+          } catch (err) {
+            toast(`อัปเดตไม่สำเร็จ: ${err.message}`, "error")
+            select.disabled = false
+          }
+        })
+      })
+    }
+
+    function renderStatusFilter() {
+      statusFilter.innerHTML = ""
+      STATUS_FILTERS.forEach(([value, label], idx) => {
+        const btn = document.createElement("button")
+        btn.textContent = label
+        if (idx === 0) btn.classList.add("active")
+        btn.addEventListener("click", () => {
+          statusFilter.querySelectorAll("button").forEach((b) => b.classList.remove("active"))
+          btn.classList.add("active")
+          activeStatus = value
+          renderRows()
+        })
+        statusFilter.appendChild(btn)
+      })
+    }
+
+    async function load() {
+      try {
+        const bookings = await getBookings()
+        // ระดับข้อมูลของแอปนี้เล็ก (โปรเจกต์ lab) ยิง detail ทีละตัวเพื่อโชว์ชื่อลูกค้า/ของเก่า/ของใหม่ได้เลย
+        const details = await Promise.all(bookings.map((b) => getBookingDetail(b.id).catch(() => null)))
+        allBookings = details.filter(Boolean).sort((a, b) => b.id - a.id)
+        loadingMsg.style.display = "none"
+        tableWrap.style.display = "block"
+        renderRows()
+      } catch (err) {
+        loadingMsg.style.display = "none"
+        errorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = "block"
+      }
+    }
+
+    renderStatusFilter()
+    load()
+  </script>
+</body>
+</html>

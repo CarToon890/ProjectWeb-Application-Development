@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 
 from app.auth import get_current_user
 from app.database import get_session
-from app.models import Item, User
+from app.models import Booking, Item, User
 from app.schemas import ItemCreate, ItemRead, ItemUpdate
 
 router = APIRouter()
@@ -92,8 +92,10 @@ def delete_item(item_id: int, session: Session = Depends(get_session), user: Use
         raise HTTPException(status.HTTP_404_NOT_FOUND, "ไม่พบรายการ")
     _require_owner_or_admin(item, user)
 
-    if item.status == "scheduled":
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "ลบไม่ได้ เพราะมีการนัดหมายแล้ว")
+    # เช็คทุก booking ที่เคยผูกกับรายการนี้ (รวมที่ยกเลิกไปแล้ว) เพราะ FK ยังอ้างถึงอยู่ ลบไม่ได้จริงๆ
+    existing_booking = session.exec(select(Booking).where(Booking.item_id == item_id)).first()
+    if existing_booking is not None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "ลบไม่ได้ เพราะรายการนี้เคยมีการจองผูกอยู่")
 
     session.delete(item)
     session.commit()

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>รายละเอียดการจอง — The Disposal Guilt</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <style>
+    .timeline-v { padding-left: 4px; }
+    .timeline-v-step {
+      display: flex;
+      gap: 12px;
+      position: relative;
+      padding-bottom: 22px;
+    }
+    .timeline-v-step:last-child { padding-bottom: 0; }
+    .timeline-v-step .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
+      margin-top: 2px;
+      position: relative;
+      z-index: 1;
+    }
+    .timeline-v-step.done .dot { background: var(--ok); }
+    .timeline-v-step.current .dot { background: var(--accent); }
+    .timeline-v-step::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 16px;
+      bottom: -6px;
+      width: 2px;
+      background: var(--border);
+    }
+    .timeline-v-step:last-child::before { display: none; }
+    .timeline-v-step.done::before { background: var(--ok); }
+    .timeline-v-step .step-label { font-size: 13px; color: var(--muted-2); }
+    .timeline-v-step.done .step-label, .timeline-v-step.current .step-label { color: var(--ink); font-weight: 500; }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-row .label { color: var(--muted); }
+    .summary-row .value { font-weight: 500; text-align: right; }
+
+    .block-title { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.03em; }
+  </style>
+</head>
+<body>
+  <div id="app-nav"></div>
+
+  <div class="container container-md">
+    <h1>รายละเอียดการจอง</h1>
+    <p class="subtitle" id="booking-id-label">กำลังโหลด...</p>
+
+    <div class="msg msg-error" id="error-msg"></div>
+
+    <div id="content" style="display: none;">
+      <div class="card" id="timeline-card">
+        <div class="block-title">สถานะ</div>
+        <div id="timeline-wrap"></div>
+      </div>
+
+      <div class="card">
+        <div class="block-title">ของเก่าที่รับ</div>
+        <div id="item-summary"></div>
+      </div>
+
+      <div class="card">
+        <div class="block-title">ของใหม่ที่ส่ง</div>
+        <div id="product-summary"></div>
+      </div>
+
+      <div class="card">
+        <div class="block-title">นัดหมาย</div>
+        <div id="booking-summary"></div>
+      </div>
+
+      <div class="card" id="action-card" style="display: none;">
+        <button class="btn btn-danger btn-block" id="cancel-btn" style="margin-top: 0;">ยกเลิกการจอง</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    requireLogin()
+    renderNav({ root: "../", active: "" })
+
+    const FURNITURE_LABEL = {
+      sofa: "โซฟา", table: "โต๊ะ", chair: "เก้าอี้", bed: "เตียง",
+      wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ", other: "อื่นๆ",
+    }
+    const CONDITION_LABEL = { good: "ดี", fair: "พอใช้", poor: "ทรุดโทรม" }
+
+    const STEPS = ["pending", "confirmed", "in_transit", "completed"]
+    const STEP_LABELS = { pending: "รอยืนยัน", confirmed: "ยืนยันแล้ว", in_transit: "ช่างกำลังมา", completed: "เสร็จสิ้น" }
+
+    const bookingId = new URLSearchParams(location.search).get("id")
+
+    const bookingIdLabel = document.getElementById("booking-id-label")
+    const errorMsg = document.getElementById("error-msg")
+    const content = document.getElementById("content")
+    const timelineWrap = document.getElementById("timeline-wrap")
+    const actionCard = document.getElementById("action-card")
+    const cancelBtn = document.getElementById("cancel-btn")
+
+    function formatDateTime(dt) {
+      const d = new Date(dt)
+      return d.toLocaleString("th-TH", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    }
+
+    function renderTimeline(status) {
+      if (status === "cancelled") {
+        timelineWrap.innerHTML = `<span class="badge badge-danger">การจองนี้ถูกยกเลิกแล้ว</span>`
+        return
+      }
+      const currentIdx = STEPS.indexOf(status)
+      timelineWrap.innerHTML = `
+        <div class="timeline-v">
+          ${STEPS.map((step, idx) => `
+            <div class="timeline-v-step ${idx < currentIdx ? "done" : ""} ${idx === currentIdx ? "current" : ""}">
+              <div class="dot"></div>
+              <div class="step-label">${STEP_LABELS[step]}</div>
+            </div>
+          `).join("")}
+        </div>
+      `
+    }
+
+    async function load() {
+      if (!bookingId) {
+        bookingIdLabel.textContent = "ไม่พบรหัสการจอง"
+        return
+      }
+
+      let detail
+      try {
+        detail = await getBookingDetail(bookingId)
+      } catch (err) {
+        bookingIdLabel.textContent = "โหลดข้อมูลไม่สำเร็จ"
+        errorMsg.textContent = err.message
+        errorMsg.style.display = "block"
+        return
+      }
+
+      bookingIdLabel.textContent = `การจอง #${detail.id}`
+      content.style.display = "block"
+
+      renderTimeline(detail.status)
+
+      document.getElementById("item-summary").innerHTML = `
+        <div class="summary-row"><span class="label">ประเภท</span><span class="value">${FURNITURE_LABEL[detail.item.furniture_type] || detail.item.furniture_type}</span></div>
+        <div class="summary-row"><span class="label">สภาพ</span><span class="value">${CONDITION_LABEL[detail.item.condition] || detail.item.condition}</span></div>
+        <div class="summary-row"><span class="label">ส่วนลดที่ได้</span><span class="value">${detail.item.estimated_price.toLocaleString()} บาท</span></div>
+      `
+
+      document.getElementById("product-summary").innerHTML = detail.product
+        ? `
+          <div class="summary-row"><span class="label">สินค้า</span><span class="value">${detail.product.name}</span></div>
+          <div class="summary-row"><span class="label">ราคา</span><span class="value">${detail.product.price.toLocaleString()} บาท</span></div>
+        `
+        : `<div class="summary-row"><span class="label">ไม่ได้เลือกสินค้าใหม่</span><span class="value">รับเป็นส่วนลดคืนอย่างเดียว</span></div>`
+
+      document.getElementById("booking-summary").innerHTML = `
+        <div class="summary-row"><span class="label">วันเวลา</span><span class="value">${formatDateTime(detail.timeslot.datetime)}</span></div>
+        <div class="summary-row"><span class="label">ทีมช่าง</span><span class="value">${detail.timeslot.technician_name}</span></div>
+        <div class="summary-row"><span class="label">ที่อยู่</span><span class="value">${detail.address}</span></div>
+        <div class="summary-row"><span class="label">ยอดรวม</span><span class="value">${detail.total_price.toLocaleString()} บาท</span></div>
+      `
+
+      const cancellable = ["pending", "confirmed"].includes(detail.status)
+      actionCard.style.display = cancellable ? "block" : "none"
+
+      cancelBtn.onclick = async () => {
+        const ok = await confirmDialog("ต้องการยกเลิกการจองนี้ใช่หรือไม่? การยกเลิกไม่สามารถย้อนกลับได้", { confirmLabel: "ยกเลิกการจอง" })
+        if (!ok) return
+        cancelBtn.disabled = true
+        try {
+          await cancelBooking(detail.id)
+          toast("ยกเลิกการจองสำเร็จ", "success")
+          await load()
+        } catch (err) {
+          toast(`ยกเลิกไม่สำเร็จ: ${err.message}`, "error")
+          cancelBtn.disabled = false
+        }
+      }
+    }
+
+    load()
+  </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>สรุปก่อนยืนยัน — The Disposal Guilt</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <style>
+    .block-title { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.03em; }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-row .label { color: var(--muted); }
+    .summary-row .value { font-weight: 500; text-align: right; }
+
+    .total-row { font-size: 18px; font-weight: 700; padding-top: 12px; }
+    .total-row .value { color: var(--ok); }
+    .total-row .value.negative { color: var(--danger); }
+
+    #retry-slot-link { display: none; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div id="app-nav"></div>
+
+  <div class="container container-md">
+    <h1>สรุปก่อนยืนยัน</h1>
+    <p class="subtitle">ตรวจสอบรายละเอียดให้ครบก่อนยืนยันการจอง</p>
+
+    <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
+    <div class="msg msg-error" id="load-error-msg"></div>
+
+    <div id="content" style="display: none;">
+      <div class="card">
+        <div class="block-title">ของเก่าที่จะให้รับ</div>
+        <div id="item-summary"></div>
+      </div>
+
+      <div class="card">
+        <div class="block-title">ของใหม่ที่จะส่ง</div>
+        <div id="product-summary"></div>
+      </div>
+
+      <div class="card">
+        <div class="block-title">วันเวลาและช่าง</div>
+        <div id="timeslot-summary"></div>
+      </div>
+
+      <form id="checkout-form" class="card">
+        <label for="address">ที่อยู่รับ-ส่งของ</label>
+        <input type="text" name="address" id="address" required placeholder="บ้านเลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด" />
+
+        <div class="summary-row total-row">
+          <span class="label">ยอดที่ต้องจ่าย</span>
+          <span class="value" id="total-price">-</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">ยืนยันการจอง</button>
+        <div class="msg msg-error" id="error-msg"></div>
+        <a href="select-datetime.html" id="retry-slot-link">เลือกช่วงเวลาใหม่</a>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/flow.js"></script>
+  <script>
+    requireLogin()
+    renderNav({ root: "../", active: "" })
+
+    const FURNITURE_LABEL = {
+      sofa: "โซฟา", table: "โต๊ะ", chair: "เก้าอี้", bed: "เตียง",
+      wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ", other: "อื่นๆ",
+    }
+    const CONDITION_LABEL = { good: "ดี", fair: "พอใช้", poor: "ทรุดโทรม" }
+
+    const params = new URLSearchParams(location.search)
+    const flow = getFlow()
+    const itemId = params.get("item_id") || flow.item_id
+    const productId = params.get("product_id") || flow.product_id
+    const timeslotId = Number(params.get("timeslot_id") || flow.timeslot_id)
+
+    const loadingMsg = document.getElementById("loading-msg")
+    const loadErrorMsg = document.getElementById("load-error-msg")
+    const content = document.getElementById("content")
+    const errorMsg = document.getElementById("error-msg")
+    const retrySlotLink = document.getElementById("retry-slot-link")
+    const submitBtn = document.getElementById("submit-btn")
+    const form = document.getElementById("checkout-form")
+
+    let item = null
+    let product = null
+
+    function formatDateTime(dt) {
+      const d = new Date(dt)
+      return d.toLocaleString("th-TH", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    }
+
+    function renderTotal() {
+      const total = (product ? product.price : 0) - item.estimated_price
+      const totalEl = document.getElementById("total-price")
+      totalEl.textContent = `${total.toLocaleString()} บาท${total < 0 ? " (ทางร้านจ่ายคืน)" : ""}`
+      totalEl.classList.toggle("negative", total < 0)
+    }
+
+    async function load() {
+      if (!itemId || !timeslotId) {
+        loadingMsg.style.display = "none"
+        loadErrorMsg.textContent = "ข้อมูลการจองไม่ครบ กรุณาเริ่มใหม่จากการเลือกของใหม่และช่วงเวลา"
+        loadErrorMsg.style.display = "block"
+        return
+      }
+
+      try {
+        const [meResult, itemResult, slots] = await Promise.all([
+          getMe(),
+          getItem(itemId),
+          getTimeslots(),
+        ])
+        item = itemResult
+        if (productId) {
+          product = await getProduct(productId)
+        }
+
+        const timeslot = slots.find((s) => s.id === timeslotId)
+        if (!timeslot) {
+          loadingMsg.style.display = "none"
+          loadErrorMsg.textContent = "ช่วงเวลาที่เลือกไม่พร้อมใช้งานแล้ว กรุณาเลือกใหม่"
+          loadErrorMsg.style.display = "block"
+          return
+        }
+
+        loadingMsg.style.display = "none"
+        content.style.display = "block"
+
+        document.getElementById("item-summary").innerHTML = `
+          <div class="summary-row"><span class="label">ประเภท</span><span class="value">${FURNITURE_LABEL[item.furniture_type] || item.furniture_type}</span></div>
+          <div class="summary-row"><span class="label">สภาพ</span><span class="value">${CONDITION_LABEL[item.condition] || item.condition}</span></div>
+          <div class="summary-row"><span class="label">ส่วนลดที่ได้</span><span class="value">${item.estimated_price.toLocaleString()} บาท</span></div>
+        `
+
+        document.getElementById("product-summary").innerHTML = product
+          ? `
+            <div class="summary-row"><span class="label">สินค้า</span><span class="value">${product.name}</span></div>
+            <div class="summary-row"><span class="label">ราคา</span><span class="value">${product.price.toLocaleString()} บาท</span></div>
+          `
+          : `<div class="summary-row"><span class="label">ไม่ได้เลือกสินค้าใหม่</span><span class="value">รับเป็นส่วนลดคืนอย่างเดียว</span></div>`
+
+        document.getElementById("timeslot-summary").innerHTML = `
+          <div class="summary-row"><span class="label">วันเวลา</span><span class="value">${formatDateTime(timeslot.datetime)}</span></div>
+          <div class="summary-row"><span class="label">ทีมช่าง</span><span class="value">${timeslot.technician_name}</span></div>
+        `
+
+        document.getElementById("address").value = meResult.address || ""
+        renderTotal()
+      } catch (err) {
+        loadingMsg.style.display = "none"
+        loadErrorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
+        loadErrorMsg.style.display = "block"
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault()
+      errorMsg.style.display = "none"
+      retrySlotLink.style.display = "none"
+      submitBtn.disabled = true
+      submitBtn.textContent = "กำลังจอง..."
+
+      try {
+        const booking = await createBooking({
+          item_id: Number(itemId),
+          product_id: productId ? Number(productId) : null,
+          timeslot_id: timeslotId,
+          address: form.address.value.trim(),
+        })
+        clearFlow()
+        location.href = `booking-success.html?id=${booking.id}`
+      } catch (err) {
+        if (err.message.includes("เพิ่งถูกจอง") || err.message.includes("409")) {
+          errorMsg.textContent = "ช่วงเวลานี้เพิ่งถูกจองไปโดยคนอื่น กรุณาเลือกช่วงเวลาใหม่"
+          retrySlotLink.style.display = "inline-block"
+        } else {
+          errorMsg.textContent = `จองไม่สำเร็จ: ${err.message}`
+        }
+        errorMsg.style.display = "block"
+        submitBtn.disabled = false
+        submitBtn.textContent = "ยืนยันการจอง"
+      }
+    })
+
+    load()
+  </script>
+</body>
+</html>

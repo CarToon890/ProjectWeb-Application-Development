@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Checklist — The Disposal Guilt</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <style>
+    /* mobile-first: คอลัมน์เดียวเป็นค่าเริ่มต้น ขยายเป็น 2 คอลัมน์เฉพาะจอกว้าง */
+    .container-staff { max-width: 640px; margin: 0 auto; padding: 20px 16px 40px; }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-row .label { color: var(--muted); }
+    .summary-row .value { font-weight: 500; text-align: right; }
+
+    .photo-compare { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 560px) {
+      .photo-compare { grid-template-columns: 1fr 1fr; }
+    }
+    .photo-box h3 { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .photo-box img { width: 100%; height: 160px; object-fit: cover; border-radius: var(--radius-sm); background: var(--bg); }
+    .photo-box .photo-placeholder {
+      width: 100%; height: 160px; border-radius: var(--radius-sm);
+      background: var(--bg); border: 1px dashed var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: var(--muted-2); text-align: center; padding: 8px;
+    }
+    .onsite-upload-area {
+      width: 100%; height: 160px; border-radius: var(--radius-sm);
+      border: 1.5px dashed var(--border); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: var(--muted-2); text-align: center; padding: 8px;
+    }
+    .onsite-upload-area:hover { border-color: var(--accent); }
+    .photo-status { font-size: 11px; margin-top: 6px; }
+    .photo-status.uploading { color: var(--muted); }
+    .photo-status.done { color: var(--ok-ink); }
+    .photo-status.failed { color: var(--danger); }
+
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 14px;
+    }
+    .checklist-item.checked { border-color: var(--ok); background: var(--ok-bg); }
+    .checklist-item input { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--ok); }
+
+    .status-banner {
+      text-align: center;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .status-banner.info { background: var(--accent-bg); color: var(--accent-ink); }
+    .status-banner.done { background: var(--ok-bg); color: var(--ok-ink); }
+
+    .action-btn { padding: 14px; font-size: 15px; }
+  </style>
+</head>
+<body>
+  <div id="app-nav"></div>
+
+  <div class="container-staff">
+    <h1>Digital Checklist</h1>
+    <p class="subtitle" id="booking-label">กำลังโหลด...</p>
+
+    <div class="msg msg-error" id="error-msg"></div>
+
+    <div id="content" style="display: none;">
+      <div class="card">
+        <div class="summary-row"><span class="label">ลูกค้า</span><span class="value" id="s-customer">-</span></div>
+        <div class="summary-row"><span class="label">ที่อยู่</span><span class="value" id="s-address">-</span></div>
+        <div class="summary-row"><span class="label">ของเก่าที่รับ</span><span class="value" id="s-item">-</span></div>
+        <div class="summary-row"><span class="label">ของใหม่ที่ส่ง</span><span class="value" id="s-product">-</span></div>
+      </div>
+
+      <div class="card">
+        <div class="block-title" style="font-size:13px; font-weight:600; color:var(--muted); margin-bottom:10px;">เทียบรูปกับของจริง</div>
+        <div class="photo-compare">
+          <div class="photo-box">
+            <h3>รูปที่ลูกค้าส่งมา</h3>
+            <img id="customer-photo" style="display:none;" />
+            <div class="photo-placeholder" id="customer-photo-empty">ลูกค้าไม่ได้แนบรูป</div>
+          </div>
+          <div class="photo-box">
+            <h3>ถ่ายรูปหน้างาน</h3>
+            <img id="onsite-photo-preview" style="display:none;" />
+            <div class="onsite-upload-area" id="onsite-upload-area">แตะเพื่อถ่าย/เลือกรูป</div>
+            <input type="file" id="onsite-photo-input" accept="image/*" capture="environment" style="display:none;" />
+            <div class="photo-status" id="onsite-photo-status"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="block-title" style="font-size:13px; font-weight:600; color:var(--muted); margin-bottom:10px;">Checklist ก่อนขน (ต้องติ๊กครบก่อนอัปเดตสถานะ)</div>
+        <div id="checklist-items"></div>
+      </div>
+
+      <div class="card">
+        <div class="block-title" style="font-size:13px; font-weight:600; color:var(--muted); margin-bottom:10px;">ถ่ายรูปสภาพผนัง/พื้นก่อนขน (ไม่บังคับ)</div>
+        <img id="wall-photo-preview" style="display:none; width:100%; height:140px; object-fit:cover; border-radius:8px; margin-bottom:8px;" />
+        <div class="onsite-upload-area" id="wall-upload-area" style="height:100px;">แตะเพื่อถ่าย/เลือกรูป</div>
+        <input type="file" id="wall-photo-input" accept="image/*" capture="environment" style="display:none;" />
+        <div class="photo-status" id="wall-photo-status"></div>
+      </div>
+
+      <div class="card">
+        <label for="note">หมายเหตุ (ไม่บังคับ)</label>
+        <textarea id="note" placeholder="เช่น ทางเข้าแคบ ต้องถอดขาโซฟาก่อนขน"></textarea>
+      </div>
+
+      <div id="action-card"></div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    ;(async () => {
+      await requireRole(["staff", "admin"])
+      renderNav({ root: "../", dir: "staff", active: "jobs" })
+      load()
+    })()
+
+    const FURNITURE_LABEL = {
+      sofa: "โซฟา", table: "โต๊ะ", chair: "เก้าอี้", bed: "เตียง",
+      wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ", other: "อื่นๆ",
+    }
+    const CONDITION_LABEL = { good: "ดี", fair: "พอใช้", poor: "ทรุดโทรม" }
+    const CHECKLIST_ITEMS = [
+      "ประเภทตรงกับที่ลูกค้าแจ้งไว้",
+      "สภาพตรงตามที่ลูกค้าแจ้งไว้",
+      "ขนาดเข้าออกได้ ไม่ติดขัด",
+      "ทางเข้าออกผ่านได้สะดวก ปลอดภัย",
+    ]
+
+    const bookingId = new URLSearchParams(location.search).get("id")
+
+    const bookingLabel = document.getElementById("booking-label")
+    const errorMsg = document.getElementById("error-msg")
+    const content = document.getElementById("content")
+
+    let onsitePhotoUploading = false
+    let wallPhotoUploading = false
+    const checkedState = new Array(CHECKLIST_ITEMS.length).fill(false)
+
+    function renderChecklist() {
+      const wrap = document.getElementById("checklist-items")
+      wrap.innerHTML = CHECKLIST_ITEMS.map((label, idx) => `
+        <label class="checklist-item ${checkedState[idx] ? "checked" : ""}" data-idx="${idx}">
+          <input type="checkbox" ${checkedState[idx] ? "checked" : ""} />
+          <span>${label}</span>
+        </label>
+      `).join("")
+      wrap.querySelectorAll(".checklist-item").forEach((el) => {
+        el.addEventListener("click", (e) => {
+          e.preventDefault()
+          const idx = Number(el.dataset.idx)
+          checkedState[idx] = !checkedState[idx]
+          renderChecklist()
+          updateActionButton()
+        })
+      })
+    }
+
+    function setupPhotoUpload(areaId, inputId, previewId, statusId, onUploading) {
+      const area = document.getElementById(areaId)
+      const input = document.getElementById(inputId)
+      const preview = document.getElementById(previewId)
+      const statusEl = document.getElementById(statusId)
+
+      area.addEventListener("click", () => input.click())
+
+      input.addEventListener("change", async () => {
+        const file = input.files[0]
+        if (!file) return
+
+        preview.src = URL.createObjectURL(file)
+        preview.style.display = "block"
+        area.style.display = "none"
+
+        onUploading(true)
+        statusEl.textContent = "กำลังอัปโหลด..."
+        statusEl.className = "photo-status uploading"
+
+        try {
+          await uploadImage(file)
+          statusEl.textContent = "อัปโหลดสำเร็จ"
+          statusEl.className = "photo-status done"
+        } catch (err) {
+          statusEl.textContent = `อัปโหลดไม่สำเร็จ: ${err.message}`
+          statusEl.className = "photo-status failed"
+        } finally {
+          onUploading(false)
+        }
+      })
+    }
+
+    setupPhotoUpload("onsite-upload-area", "onsite-photo-input", "onsite-photo-preview", "onsite-photo-status", (v) => {
+      onsitePhotoUploading = v
+      updateActionButton()
+    })
+    setupPhotoUpload("wall-upload-area", "wall-photo-input", "wall-photo-preview", "wall-photo-status", (v) => {
+      wallPhotoUploading = v
+      updateActionButton()
+    })
+
+    let currentDetail = null
+
+    function updateActionButton() {
+      const btn = document.getElementById("action-submit-btn")
+      if (!btn) return
+      const allChecked = checkedState.every(Boolean)
+      btn.disabled = !allChecked || onsitePhotoUploading || wallPhotoUploading
+    }
+
+    function renderActionCard(detail) {
+      const actionCard = document.getElementById("action-card")
+
+      if (detail.status === "pending") {
+        actionCard.innerHTML = `<div class="status-banner info">งานนี้ยังรอแอดมินยืนยันก่อน ยังอัปเดตสถานะไม่ได้</div>`
+        return
+      }
+      if (detail.status === "completed") {
+        actionCard.innerHTML = `<div class="status-banner done">งานนี้เสร็จสิ้นแล้ว ✅</div>`
+        return
+      }
+      if (detail.status === "cancelled") {
+        actionCard.innerHTML = `<div class="status-banner info">การจองนี้ถูกยกเลิกแล้ว</div>`
+        return
+      }
+
+      const nextStatus = detail.status === "confirmed" ? "in_transit" : "completed"
+      const btnLabel = detail.status === "confirmed" ? "รับของแล้ว — เริ่มขนส่ง" : "ส่งเสร็จเรียบร้อย"
+
+      actionCard.innerHTML = `
+        <button class="btn btn-primary btn-block action-btn" id="action-submit-btn" disabled>${btnLabel}</button>
+        <p style="font-size:11px; color:var(--muted-2); text-align:center; margin-top:8px;">ติ๊ก checklist ให้ครบก่อนถึงจะกดอัปเดตสถานะได้</p>
+      `
+
+      document.getElementById("action-submit-btn").addEventListener("click", async () => {
+        const btn = document.getElementById("action-submit-btn")
+        btn.disabled = true
+        btn.textContent = "กำลังอัปเดต..."
+        try {
+          await updateBookingStatus(detail.id, nextStatus)
+          toast("อัปเดตสถานะสำเร็จ", "success")
+          await load()
+        } catch (err) {
+          toast(`อัปเดตไม่สำเร็จ: ${err.message}`, "error")
+          btn.disabled = false
+          btn.textContent = btnLabel
+        }
+      })
+
+      updateActionButton()
+    }
+
+    async function load() {
+      if (!bookingId) {
+        bookingLabel.textContent = "ไม่พบรหัสการจอง"
+        return
+      }
+
+      let detail
+      try {
+        detail = await getBookingDetail(bookingId)
+      } catch (err) {
+        bookingLabel.textContent = "โหลดข้อมูลไม่สำเร็จ"
+        errorMsg.textContent = err.message
+        errorMsg.style.display = "block"
+        return
+      }
+
+      currentDetail = detail
+      bookingLabel.textContent = `การจอง #${detail.id}`
+      content.style.display = "block"
+
+      document.getElementById("s-customer").textContent = `${detail.user.full_name} (${detail.user.phone || "ไม่มีเบอร์"})`
+      document.getElementById("s-address").textContent = detail.address
+      document.getElementById("s-item").textContent = `${FURNITURE_LABEL[detail.item.furniture_type] || detail.item.furniture_type} · สภาพ${CONDITION_LABEL[detail.item.condition] || detail.item.condition}`
+      document.getElementById("s-product").textContent = detail.product ? detail.product.name : "ไม่มี (คืนส่วนลดอย่างเดียว)"
+
+      if (detail.item.photo_url) {
+        document.getElementById("customer-photo").src = detail.item.photo_url
+        document.getElementById("customer-photo").style.display = "block"
+        document.getElementById("customer-photo-empty").style.display = "none"
+      }
+
+      renderChecklist()
+      renderActionCard(detail)
+    }
+  </script>
+</body>
+</html>

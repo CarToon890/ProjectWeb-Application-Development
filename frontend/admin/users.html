@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>จัดการผู้ใช้ — Admin</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <style>
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 18px; }
+    .pagination .btn { padding: 8px 16px; font-size: 13px; }
+    .pagination .page-label { font-size: 13px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div id="app-nav"></div>
+
+  <div class="container container-lg">
+    <h1>จัดการผู้ใช้</h1>
+    <p class="subtitle">ผู้ใช้ทั้งหมดในระบบ</p>
+
+    <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
+    <div class="msg msg-error" id="error-msg"></div>
+
+    <div class="table-wrap" id="table-wrap" style="display: none;">
+      <table class="data-table">
+        <thead>
+          <tr><th>#</th><th>Username</th><th>ชื่อ-นามสกุล</th><th>Email</th><th>Role</th><th>จัดการ</th></tr>
+        </thead>
+        <tbody id="users-body"></tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button class="btn btn-outline" id="prev-btn">← ก่อนหน้า</button>
+      <span class="page-label" id="page-label">หน้า 1</span>
+      <button class="btn btn-outline" id="next-btn">ถัดไป →</button>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    ;(async () => {
+      await requireRole("admin")
+      renderNav({ root: "../", dir: "admin", active: "a-users" })
+      load()
+    })()
+
+    const ROLES = ["user", "staff", "admin"]
+    const ROLE_LABEL = { user: "ลูกค้า", staff: "ช่าง", admin: "แอดมิน" }
+    const LIMIT = 10
+
+    const loadingMsg = document.getElementById("loading-msg")
+    const errorMsg = document.getElementById("error-msg")
+    const tableWrap = document.getElementById("table-wrap")
+    const tbody = document.getElementById("users-body")
+    const prevBtn = document.getElementById("prev-btn")
+    const nextBtn = document.getElementById("next-btn")
+    const pageLabel = document.getElementById("page-label")
+
+    let currentPage = 1
+    let currentUserId = null
+
+    prevBtn.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage -= 1
+        load()
+      }
+    })
+    nextBtn.addEventListener("click", () => {
+      currentPage += 1
+      load()
+    })
+
+    async function load() {
+      try {
+        if (!currentUserId) {
+          const me = await getMe()
+          currentUserId = me.id
+        }
+
+        const users = await getUsers(currentPage, LIMIT)
+        loadingMsg.style.display = "none"
+        tableWrap.style.display = "block"
+        pageLabel.textContent = `หน้า ${currentPage}`
+        prevBtn.disabled = currentPage <= 1
+        nextBtn.disabled = users.length < LIMIT
+
+        tbody.innerHTML = users.map((u) => `
+          <tr>
+            <td>#${u.id}</td>
+            <td>${u.username}</td>
+            <td>${u.full_name}</td>
+            <td>${u.email}</td>
+            <td>
+              <select class="inline-select role-select" data-id="${u.id}" ${u.id === currentUserId ? "disabled" : ""}>
+                ${ROLES.map((r) => `<option value="${r}" ${r === u.role ? "selected" : ""}>${ROLE_LABEL[r]}</option>`).join("")}
+              </select>
+            </td>
+            <td class="table-actions">
+              <button class="btn btn-danger delete-btn" data-id="${u.id}" data-name="${u.full_name}" ${u.id === currentUserId ? "disabled" : ""}>ลบ</button>
+            </td>
+          </tr>
+        `).join("") || `<tr><td colspan="6" style="text-align:center; color:var(--muted-2);">ไม่มีผู้ใช้ในหน้านี้</td></tr>`
+
+        tbody.querySelectorAll(".role-select").forEach((select) => {
+          select.addEventListener("change", async () => {
+            const id = Number(select.dataset.id)
+            select.disabled = true
+            try {
+              await updateUserRole(id, select.value)
+              toast("เปลี่ยน role สำเร็จ", "success")
+            } catch (err) {
+              toast(`เปลี่ยน role ไม่สำเร็จ: ${err.message}`, "error")
+            } finally {
+              select.disabled = false
+            }
+          })
+        })
+
+        tbody.querySelectorAll(".delete-btn").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const id = Number(btn.dataset.id)
+            const ok = await confirmDialog(`ต้องการลบผู้ใช้ "${btn.dataset.name}" นี้ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้`, { confirmLabel: "ลบ" })
+            if (!ok) return
+            try {
+              await deleteUser(id)
+              toast("ลบผู้ใช้สำเร็จ", "success")
+              await load()
+            } catch (err) {
+              toast(`ลบไม่สำเร็จ: ${err.message}`, "error")
+            }
+          })
+        })
+      } catch (err) {
+        loadingMsg.style.display = "none"
+        errorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = "block"
+      }
+    }
+  </script>
+</body>
+</html>

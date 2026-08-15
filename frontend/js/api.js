@@ -69,6 +69,10 @@ async function updateUser(id, data) {
   return apiFetch(`/api/users/${id}`, jsonBody("PUT", data))
 }
 
+async function updateUserRole(id, role) {
+  return apiFetch(`/api/users/${id}/role`, jsonBody("PUT", { role }))
+}
+
 async function deleteUser(id) {
   return apiFetch(`/api/users/${id}`, { method: "DELETE" })
 }
@@ -76,6 +80,13 @@ async function deleteUser(id) {
 // ---------- Items ----------
 async function createItem(data) {
   return apiFetch("/api/items", jsonBody("POST", data))
+}
+
+// ไม่ใช้ jsonBody เพราะเป็น multipart — ปล่อยให้ fetch ใส่ Content-Type + boundary ให้เอง
+async function uploadImage(file) {
+  const formData = new FormData()
+  formData.append("file", file)
+  return apiFetch("/api/uploads", { method: "POST", body: formData })
 }
 
 async function getItems() {
@@ -104,9 +115,38 @@ async function getProduct(id) {
   return apiFetch(`/api/products/${id}`)
 }
 
+async function createProduct(data) {
+  return apiFetch("/api/products", jsonBody("POST", data))
+}
+
+async function updateProduct(id, data) {
+  return apiFetch(`/api/products/${id}`, jsonBody("PUT", data))
+}
+
+async function deleteProduct(id) {
+  return apiFetch(`/api/products/${id}`, { method: "DELETE" })
+}
+
 // ---------- Bookings ----------
 async function getTimeslots() {
   return apiFetch("/api/timeslots")
+}
+
+// รวมรอบเวลาทั้งหมด (แอดมินเท่านั้น) ต่างจาก getTimeslots() ที่ให้แค่รอบว่างในอนาคต
+async function getAllTimeslots() {
+  return apiFetch("/api/timeslots/all")
+}
+
+async function createTimeslot(data) {
+  return apiFetch("/api/timeslots", jsonBody("POST", data))
+}
+
+async function updateTimeslot(id, data) {
+  return apiFetch(`/api/timeslots/${id}`, jsonBody("PUT", data))
+}
+
+async function deleteTimeslot(id) {
+  return apiFetch(`/api/timeslots/${id}`, { method: "DELETE" })
 }
 
 async function createBooking(data) {
@@ -121,12 +161,22 @@ async function getBooking(id) {
   return apiFetch(`/api/bookings/${id}`)
 }
 
+// รวม item/product/timeslot/user มาให้ในก้อนเดียว กันยิงหลาย request
+async function getBookingDetail(id) {
+  return apiFetch(`/api/bookings/${id}/detail`)
+}
+
 async function cancelBooking(id) {
   return apiFetch(`/api/bookings/${id}/cancel`, { method: "PUT" })
 }
 
 async function updateBookingStatus(id, status) {
   return apiFetch(`/api/bookings/${id}/status`, jsonBody("PUT", { status }))
+}
+
+// ---------- Staff ----------
+async function getStaffJobs() {
+  return apiFetch("/api/staff/jobs")
 }
 
 // ---------- Eco ----------

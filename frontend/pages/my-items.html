@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ของเก่าของฉัน — The Disposal Guilt</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <style>
+    .status-filter {
+      margin-bottom: 18px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .status-filter button {
+      padding: 6px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      background: var(--surface);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .status-filter button.active { border-color: var(--ink); background: var(--ink); color: #fff; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .item-card { display: flex; flex-direction: column; }
+    .item-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+    .item-title { font-size: 15px; font-weight: 600; }
+    .item-sub { font-size: 12px; color: var(--muted-2); margin-bottom: 10px; }
+    .item-price { font-size: 18px; font-weight: 700; color: var(--ok); margin-bottom: 12px; }
+    .item-desc { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+
+    .item-actions { display: flex; gap: 8px; margin-top: auto; }
+    .item-actions .btn { flex: 1; padding: 8px; font-size: 12px; }
+
+    .edit-panel { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-light); }
+    .edit-panel .field { margin-bottom: 10px; }
+    .edit-panel label { font-size: 12px; }
+    .edit-actions { display: flex; gap: 8px; }
+    .edit-actions .btn { flex: 1; padding: 8px; font-size: 12px; margin-top: 0; }
+
+    .condition-mini { display: flex; gap: 6px; }
+    .condition-mini button {
+      flex: 1;
+      padding: 6px 4px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .condition-mini button.selected { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-ink); font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div id="app-nav"></div>
+
+  <div class="container container-lg">
+    <h1>ของเก่าของฉัน</h1>
+    <p class="subtitle">รายการของเก่าที่คุณเคยส่งประเมินไว้ทั้งหมด</p>
+
+    <div class="status-filter" id="status-filter"></div>
+    <div class="msg msg-error" id="error-msg"></div>
+    <div class="empty-state" id="empty-msg" style="display: none;">ยังไม่มีรายการในหมวดนี้</div>
+
+    <div class="grid" id="item-grid"></div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    requireLogin()
+    renderNav({ root: "../", active: "myitems" })
+
+    const FURNITURE_LABEL = {
+      sofa: "โซฟา", table: "โต๊ะ", chair: "เก้าอี้", bed: "เตียง",
+      wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ", other: "อื่นๆ",
+    }
+    const CONDITION_LABEL = { good: "ดี", fair: "พอใช้", poor: "ทรุดโทรม" }
+    const STATUS_LABEL = {
+      pending: "รอตรวจสอบ", assessed: "ประเมินแล้ว", scheduled: "นัดหมายแล้ว",
+      picked_up: "รับของแล้ว", donated: "ส่งต่อสำเร็จ",
+    }
+    const STATUS_BADGE_CLASS = {
+      pending: "badge-muted", assessed: "badge-accent", scheduled: "badge-accent",
+      picked_up: "badge-ok", donated: "badge-ok",
+    }
+    const STATUS_FILTERS = [
+      ["", "ทั้งหมด"], ["pending", "รอตรวจสอบ"], ["assessed", "ประเมินแล้ว"],
+      ["scheduled", "นัดหมายแล้ว"], ["picked_up", "รับของแล้ว"], ["donated", "ส่งต่อสำเร็จ"],
+    ]
+
+    const errorMsg = document.getElementById("error-msg")
+    const emptyMsg = document.getElementById("empty-msg")
+    const grid = document.getElementById("item-grid")
+    const statusFilter = document.getElementById("status-filter")
+
+    let allItems = []
+    let activeStatus = ""
+
+    function showError(message) {
+      errorMsg.textContent = message
+      errorMsg.style.display = "block"
+    }
+
+    function renderItems() {
+      const items = activeStatus ? allItems.filter((i) => i.status === activeStatus) : allItems
+      grid.innerHTML = ""
+      emptyMsg.style.display = items.length === 0 ? "block" : "none"
+
+      for (const item of items) {
+        const card = document.createElement("div")
+        card.className = "card item-card"
+        card.innerHTML = `
+          <div class="item-card-head">
+            <div>
+              <div class="item-title">${FURNITURE_LABEL[item.furniture_type] || item.furniture_type}</div>
+              <div class="item-sub">สภาพ: ${CONDITION_LABEL[item.condition] || item.condition} · #${item.id}</div>
+            </div>
+            <span class="badge ${STATUS_BADGE_CLASS[item.status] || "badge-muted"}">${STATUS_LABEL[item.status] || item.status}</span>
+          </div>
+          <div class="item-price">${item.estimated_price.toLocaleString()} บาท</div>
+          ${item.description ? `<div class="item-desc">${item.description}</div>` : ""}
+          <div class="item-actions">
+            <button class="btn btn-outline edit-btn">แก้ไข</button>
+            <button class="btn btn-danger delete-btn" ${item.status === "scheduled" ? "style=\"display:none;\"" : ""}>ลบ</button>
+          </div>
+          <div class="edit-panel" style="display: none;"></div>
+        `
+
+        const editPanel = card.querySelector(".edit-panel")
+        const editBtn = card.querySelector(".edit-btn")
+        const deleteBtn = card.querySelector(".delete-btn")
+
+        editBtn.addEventListener("click", () => {
+          const isOpen = editPanel.style.display !== "none"
+          if (isOpen) {
+            editPanel.style.display = "none"
+            editPanel.innerHTML = ""
+            editBtn.textContent = "แก้ไข"
+            return
+          }
+          editBtn.textContent = "ปิดฟอร์มแก้ไข"
+          editPanel.style.display = "block"
+          editPanel.innerHTML = `
+            <div class="field">
+              <label>ประเภทเฟอร์นิเจอร์</label>
+              <select class="edit-type">
+                ${Object.entries(FURNITURE_LABEL).map(([v, l]) => `<option value="${v}" ${v === item.furniture_type ? "selected" : ""}>${l}</option>`).join("")}
+              </select>
+            </div>
+            <div class="field">
+              <label>สภาพ</label>
+              <div class="condition-mini">
+                ${Object.entries(CONDITION_LABEL).map(([v, l]) => `<button type="button" class="edit-condition-btn ${v === item.condition ? "selected" : ""}" data-value="${v}">${l}</button>`).join("")}
+              </div>
+            </div>
+            <div class="field">
+              <label>รายละเอียด</label>
+              <textarea class="edit-desc">${item.description || ""}</textarea>
+            </div>
+            <div class="msg msg-error edit-error"></div>
+            <div class="edit-actions">
+              <button class="btn btn-outline cancel-edit-btn">ยกเลิก</button>
+              <button class="btn btn-primary save-edit-btn">บันทึก</button>
+            </div>
+          `
+
+          let selectedCondition = item.condition
+          editPanel.querySelectorAll(".edit-condition-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              editPanel.querySelectorAll(".edit-condition-btn").forEach((b) => b.classList.remove("selected"))
+              btn.classList.add("selected")
+              selectedCondition = btn.dataset.value
+            })
+          })
+
+          editPanel.querySelector(".cancel-edit-btn").addEventListener("click", () => {
+            editPanel.style.display = "none"
+            editPanel.innerHTML = ""
+            editBtn.textContent = "แก้ไข"
+          })
+
+          editPanel.querySelector(".save-edit-btn").addEventListener("click", async () => {
+            const saveBtn = editPanel.querySelector(".save-edit-btn")
+            const editErrorEl = editPanel.querySelector(".edit-error")
+            editErrorEl.style.display = "none"
+            saveBtn.disabled = true
+            saveBtn.textContent = "กำลังบันทึก..."
+            try {
+              await updateItem(item.id, {
+                furniture_type: editPanel.querySelector(".edit-type").value,
+                condition: selectedCondition,
+                description: editPanel.querySelector(".edit-desc").value.trim() || null,
+              })
+              toast("แก้ไขรายการสำเร็จ ราคาถูกคำนวณใหม่แล้ว", "success")
+              await loadItems()
+            } catch (err) {
+              editErrorEl.textContent = `บันทึกไม่สำเร็จ: ${err.message}`
+              editErrorEl.style.display = "block"
+              saveBtn.disabled = false
+              saveBtn.textContent = "บันทึก"
+            }
+          })
+        })
+
+        deleteBtn.addEventListener("click", async () => {
+          const ok = await confirmDialog(
+            `ต้องการลบรายการ "${FURNITURE_LABEL[item.furniture_type] || item.furniture_type}" นี้ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้`,
+            { confirmLabel: "ลบ" }
+          )
+          if (!ok) return
+          try {
+            await deleteItem(item.id)
+            toast("ลบรายการสำเร็จ", "success")
+            await loadItems()
+          } catch (err) {
+            toast(`ลบไม่สำเร็จ: ${err.message}`, "error")
+          }
+        })
+
+        grid.appendChild(card)
+      }
+    }
+
+    function renderStatusFilter() {
+      statusFilter.innerHTML = ""
+      STATUS_FILTERS.forEach(([value, label], idx) => {
+        const btn = document.createElement("button")
+        btn.textContent = label
+        if (idx === 0) btn.classList.add("active")
+        btn.addEventListener("click", () => {
+          statusFilter.querySelectorAll("button").forEach((b) => b.classList.remove("active"))
+          btn.classList.add("active")
+          activeStatus = value
+          renderItems()
+        })
+        statusFilter.appendChild(btn)
+      })
+    }
+
+    async function loadItems() {
+      try {
+        allItems = await getItems()
+        allItems.sort((a, b) => b.id - a.id)
+        renderItems()
+      } catch (err) {
+        showError(`โหลดข้อมูลไม่สำเร็จ: ${err.message}`)
+      }
+    }
+
+    renderStatusFilter()
+    loadItems()
+  </script>
+</body>
+</html>

@@ -51,4 +51,15 @@ def seed_data(session: Session) -> None:
             )
         )
 
+    if not session.exec(select(User).where(User.username == "staff")).first():
+        session.add(
+            User(
+                username="staff",
+                email="staff@example.com",
+                password_hash=hash_password("staff1234"),
+                full_name="ทีมช่าง A",
+                role="staff",
+            )
+        )
+
     session.commit()

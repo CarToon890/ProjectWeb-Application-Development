@@ -4,45 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>นัดวัน-เวลา — The Disposal Guilt</title>
+  <link rel="stylesheet" href="../css/main.css" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Sarabun', sans-serif;
-      background: #f5f5f0;
-      color: #1a1a1a;
-      min-height: 100vh;
-    }
-
-    nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #fff;
-      padding: 14px 24px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    }
-    nav .logo { font-size: 13px; color: #6b6b6b; letter-spacing: 0.04em; }
-    nav .links { display: flex; gap: 18px; align-items: center; font-size: 13px; }
-    nav .links a { color: #3a3a3a; text-decoration: none; }
-    nav .links a:hover { color: #3b7dd8; }
-    nav button {
-      background: none; border: none; font-size: 13px; color: #b91c1c; cursor: pointer; font-family: inherit;
-    }
-
-    .container { max-width: 640px; margin: 0 auto; padding: 32px 24px; }
-
-    h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
-    .subtitle { font-size: 14px; color: #6b6b6b; margin-bottom: 20px; }
-
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      margin-bottom: 18px;
-    }
-
     .day-group { margin-bottom: 18px; }
     .day-label { font-size: 13px; font-weight: 600; color: #3a3a3a; margin-bottom: 8px; }
 
@@ -54,120 +17,56 @@
 
     .slot-btn {
       padding: 10px 8px;
-      border: 1.5px solid #ddd;
-      border-radius: 8px;
-      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
       font-size: 13px;
       cursor: pointer;
       text-align: center;
       font-family: inherit;
       transition: all 0.15s;
     }
-    .slot-btn .tech { display: block; font-size: 11px; color: #9a9a9a; margin-top: 2px; }
-    .slot-btn:hover { border-color: #3b7dd8; }
-    .slot-btn.selected { border-color: #3b7dd8; background: #eef4ff; color: #1a52a8; font-weight: 500; }
+    .slot-btn .tech { display: block; font-size: 11px; color: var(--muted-2); margin-top: 2px; }
+    .slot-btn:hover { border-color: var(--accent); }
+    .slot-btn.selected { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-ink); font-weight: 500; }
     .slot-btn:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
 
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 500;
-      margin-bottom: 6px;
-      color: #3a3a3a;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      background: #fff;
-    }
-    input:focus { outline: none; border-color: #3b7dd8; }
-
-    button[type="submit"] {
-      width: 100%;
-      padding: 13px;
-      background: #1a1a1a;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: opacity 0.15s;
-    }
-    button[type="submit"]:hover { opacity: 0.85; }
-    button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    #error-msg {
-      display: none;
-      background: #fff0f0;
-      border: 1px solid #fca5a5;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      color: #b91c1c;
-      margin-top: 12px;
-    }
-    #empty-msg {
-      display: none;
-      background: #f5f5f0;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 14px;
-      font-size: 13px;
-      color: #6b6b6b;
-      text-align: center;
-    }
+    #empty-msg { display: none; text-align: center; padding: 14px; }
   </style>
 </head>
 <body>
-  <nav>
-    <div class="logo">THE DISPOSAL GUILT</div>
-    <div class="links">
-      <a href="../index.html">หน้าแรก</a>
-      <a href="eco-dashboard.html">Eco Dashboard</a>
-      <a href="profile.html">โปรไฟล์</a>
-      <button onclick="handleLogout()">ออกจากระบบ</button>
-    </div>
-  </nav>
+  <div id="app-nav"></div>
 
-  <div class="container">
+  <div class="container container-md">
     <h1>เลือกวัน-เวลานัดหมาย</h1>
-    <p class="subtitle">ช่างจะมารับของเก่าและส่งของใหม่ในนัดเดียวกัน</p>
+    <p class="subtitle">รอบเดียวจบ: ช่างจะมารับของเก่าและส่งของใหม่พร้อมกันในนัดหมายเดียว</p>
 
     <div class="card">
       <div id="slots-wrap"></div>
-      <div id="empty-msg">ไม่มีช่วงเวลาว่างในตอนนี้ ลองกลับมาดูใหม่ภายหลัง</div>
+      <div class="msg-empty" id="empty-msg">ไม่มีช่วงเวลาว่างในตอนนี้ ลองกลับมาดูใหม่ภายหลัง</div>
     </div>
 
-    <form id="booking-form" class="card">
-      <label for="address">ที่อยู่รับ-ส่งของ</label>
-      <input type="text" name="address" id="address" required placeholder="บ้านเลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด" />
-
-      <button type="submit" id="submit-btn" disabled>ยืนยันการจอง</button>
-      <div id="error-msg"></div>
-    </form>
+    <div class="msg msg-error" id="error-msg"></div>
+    <button class="btn btn-primary btn-block" id="next-btn" disabled>ถัดไป: สรุปก่อนยืนยัน</button>
   </div>
 
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/flow.js"></script>
   <script>
     requireLogin()
+    renderNav({ root: "../", active: "" })
 
     const params = new URLSearchParams(location.search)
-    const itemId = params.get('item_id')
-    const productId = params.get('product_id')
+    const flow = getFlow()
+    const itemId = params.get('item_id') || flow.item_id
+    const productId = params.get('product_id') || flow.product_id
 
     const slotsWrap = document.getElementById('slots-wrap')
     const emptyMsg = document.getElementById('empty-msg')
-    const submitBtn = document.getElementById('submit-btn')
+    const nextBtn = document.getElementById('next-btn')
     const errorMsg = document.getElementById('error-msg')
-    const form = document.getElementById('booking-form')
 
     let selectedSlotId = null
 
@@ -183,14 +82,14 @@
       selectedSlotId = id
       document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'))
       btn.classList.add('selected')
-      submitBtn.disabled = false
+      nextBtn.disabled = false
     }
 
     async function loadSlots() {
       errorMsg.style.display = 'none'
       slotsWrap.innerHTML = ''
       selectedSlotId = null
-      submitBtn.disabled = true
+      nextBtn.disabled = true
 
       let slots
       try {
@@ -239,38 +138,19 @@
       }
     }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault()
+    nextBtn.addEventListener('click', () => {
       errorMsg.style.display = 'none'
 
       if (!itemId) {
-        errorMsg.textContent = 'ไม่พบ item_id กรุณากลับไปประเมินของเก่าใหม่'
+        errorMsg.textContent = 'ไม่พบรายการของเก่า กรุณากลับไปประเมินของเก่าใหม่'
         errorMsg.style.display = 'block'
         return
       }
       if (!selectedSlotId) return
 
-      submitBtn.disabled = true
-      submitBtn.textContent = 'กำลังจอง...'
-
-      try {
-        const booking = await createBooking({
-          item_id: Number(itemId),
-          product_id: productId ? Number(productId) : null,
-          timeslot_id: selectedSlotId,
-          address: form.address.value.trim(),
-        })
-        location.href = `booking-status.html?id=${booking.id}`
-      } catch (err) {
-        if (err.message.includes('เพิ่งถูกจอง') || err.message.includes('409')) {
-          errorMsg.textContent = 'ช่วงเวลานี้เพิ่งถูกจอง กรุณาเลือกใหม่'
-        } else {
-          errorMsg.textContent = `จองไม่สำเร็จ: ${err.message}`
-        }
-        errorMsg.style.display = 'block'
-        submitBtn.textContent = 'ยืนยันการจอง'
-        await loadSlots()
-      }
+      setFlow({ item_id: Number(itemId), product_id: productId ? Number(productId) : null, timeslot_id: selectedSlotId })
+      const productParam = productId ? `&product_id=${productId}` : ''
+      location.href = `checkout.html?item_id=${itemId}${productParam}&timeslot_id=${selectedSlotId}`
     })
 
     loadSlots()

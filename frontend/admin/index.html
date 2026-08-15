@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — The Disposal Guilt</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <style>
+    .stat-row { margin-bottom: 28px; }
+  </style>
+</head>
+<body>
+  <div id="app-nav"></div>
+
+  <div class="container container-lg">
+    <h1>Admin Dashboard</h1>
+    <p class="subtitle">ภาพรวมระบบวันนี้</p>
+
+    <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
+    <div class="msg msg-error" id="error-msg"></div>
+
+    <div id="content" style="display: none;">
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-today">-</div>
+          <div class="stat-label">นัดหมายวันนี้</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-pending">-</div>
+          <div class="stat-label">รอยืนยัน</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-pending-items">-</div>
+          <div class="stat-label">ของรอตรวจสอบ</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-co2">-</div>
+          <div class="stat-label">กก. CO₂ รวมทั้งระบบ</div>
+        </div>
+      </div>
+
+      <div class="section-title">การจองล่าสุด</div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th><th>ลูกค้า</th><th>วันเวลานัด</th><th>สถานะ</th><th>ยอดรวม</th>
+            </tr>
+          </thead>
+          <tbody id="recent-bookings-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    ;(async () => {
+      await requireRole("admin")
+      renderNav({ root: "../", dir: "admin", active: "dashboard" })
+      load()
+    })()
+
+    const STATUS_LABEL = {
+      pending: "รอยืนยัน", confirmed: "ยืนยันแล้ว", in_transit: "กำลังขนส่ง",
+      completed: "เสร็จสิ้น", cancelled: "ยกเลิกแล้ว",
+    }
+    const STATUS_BADGE_CLASS = {
+      pending: "badge-muted", confirmed: "badge-accent", in_transit: "badge-accent",
+      completed: "badge-ok", cancelled: "badge-danger",
+    }
+
+    function isSameDay(a, b) {
+      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+    }
+    function formatDateTime(dt) {
+      return new Date(dt).toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    }
+
+    async function load() {
+      const loadingMsg = document.getElementById("loading-msg")
+      const errorMsg = document.getElementById("error-msg")
+      const content = document.getElementById("content")
+
+      try {
+        const [bookings, items, eco] = await Promise.all([getBookings(), getItems(), getEcoStats()])
+
+        // ต้องรู้วันเวลานัดของแต่ละ booking เพื่อนับ "นัดหมายวันนี้" — ยิง detail ทีละตัว
+        // ระดับข้อมูลของแอปนี้เล็ก (โปรเจกต์ lab) จึงยอมรับได้ ไม่ต้องทำ endpoint สรุปแยก
+        const details = await Promise.all(bookings.map((b) => getBookingDetail(b.id).catch(() => null)))
+        const validDetails = details.filter(Boolean)
+
+        const now = new Date()
+        const todayCount = validDetails.filter((d) => isSameDay(new Date(d.timeslot.datetime), now)).length
+        const pendingCount = bookings.filter((b) => b.status === "pending").length
+        const pendingItemsCount = items.filter((i) => i.status === "pending").length
+
+        document.getElementById("stat-today").textContent = todayCount
+        document.getElementById("stat-pending").textContent = pendingCount
+        document.getElementById("stat-pending-items").textContent = pendingItemsCount
+        document.getElementById("stat-co2").textContent = eco.total_co2_saved_kg.toFixed(1)
+
+        const recent = validDetails.sort((a, b) => b.id - a.id).slice(0, 10)
+        document.getElementById("recent-bookings-body").innerHTML = recent.map((d) => `
+          <tr>
+            <td>#${d.id}</td>
+            <td>${d.user.full_name}</td>
+            <td>${formatDateTime(d.timeslot.datetime)}</td>
+            <td><span class="badge ${STATUS_BADGE_CLASS[d.status] || "badge-muted"}">${STATUS_LABEL[d.status] || d.status}</span></td>
+            <td>${d.total_price.toLocaleString()} บาท</td>
+          </tr>
+        `).join("") || `<tr><td colspan="5" style="text-align:center; color:var(--muted-2);">ยังไม่มีการจอง</td></tr>`
+
+        loadingMsg.style.display = "none"
+        content.style.display = "block"
+      } catch (err) {
+        loadingMsg.style.display = "none"
+        errorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = "block"
+      }
+    }
+  </script>
+</body>
+</html>

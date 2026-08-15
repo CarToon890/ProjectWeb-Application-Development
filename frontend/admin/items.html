@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ของเก่าทั้งระบบ — Admin</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <style>
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    .filter-row select {
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 13px; font-family: inherit; background: var(--surface);
+    }
+    .item-photo { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; background: var(--bg); }
+    .item-photo-empty { width: 44px; height: 44px; border-radius: 6px; background: var(--bg); display: inline-block; }
+
+    .edit-inline { display: flex; gap: 6px; align-items: center; }
+    .edit-inline select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; }
+  </style>
+</head>
+<body>
+  <div id="app-nav"></div>
+
+  <div class="container container-lg">
+    <h1>ของเก่าทั้งระบบ</h1>
+    <p class="subtitle">รายการของเก่าที่ลูกค้าส่งประเมินทั้งหมด</p>
+
+    <div class="filter-row">
+      <select id="status-select">
+        <option value="">สถานะ: ทั้งหมด</option>
+        <option value="pending">รอตรวจสอบ</option>
+        <option value="assessed">ประเมินแล้ว</option>
+        <option value="scheduled">นัดหมายแล้ว</option>
+        <option value="picked_up">รับของแล้ว</option>
+        <option value="donated">ส่งต่อสำเร็จ</option>
+      </select>
+      <select id="type-select">
+        <option value="">ประเภท: ทั้งหมด</option>
+        <option value="sofa">โซฟา</option>
+        <option value="table">โต๊ะ</option>
+        <option value="chair">เก้าอี้</option>
+        <option value="bed">เตียง</option>
+        <option value="wardrobe">ตู้เสื้อผ้า</option>
+        <option value="shelf">ชั้นวางของ</option>
+        <option value="other">อื่นๆ</option>
+      </select>
+    </div>
+
+    <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
+    <div class="msg msg-error" id="error-msg"></div>
+    <div class="empty-state" id="empty-msg" style="display: none;">ไม่พบรายการในหมวดนี้</div>
+
+    <div class="table-wrap" id="table-wrap" style="display: none;">
+      <table class="data-table">
+        <thead>
+          <tr><th>รูป</th><th>#</th><th>ประเภท</th><th>สภาพ</th><th>ราคา</th><th>สถานะ</th><th>แก้ไข</th></tr>
+        </thead>
+        <tbody id="items-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    ;(async () => {
+      await requireRole("admin")
+      renderNav({ root: "../", dir: "admin", active: "a-items" })
+      load()
+    })()
+
+    const FURNITURE_LABEL = {
+      sofa: "โซฟา", table: "โต๊ะ", chair: "เก้าอี้", bed: "เตียง",
+      wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ", other: "อื่นๆ",
+    }
+    const CONDITION_LABEL = { good: "ดี", fair: "พอใช้", poor: "ทรุดโทรม" }
+    const STATUS_LABEL = {
+      pending: "รอตรวจสอบ", assessed: "ประเมินแล้ว", scheduled: "นัดหมายแล้ว",
+      picked_up: "รับของแล้ว", donated: "ส่งต่อสำเร็จ",
+    }
+    const STATUS_BADGE_CLASS = {
+      pending: "badge-muted", assessed: "badge-accent", scheduled: "badge-accent",
+      picked_up: "badge-ok", donated: "badge-ok",
+    }
+
+    const loadingMsg = document.getElementById("loading-msg")
+    const errorMsg = document.getElementById("error-msg")
+    const emptyMsg = document.getElementById("empty-msg")
+    const tableWrap = document.getElementById("table-wrap")
+    const tbody = document.getElementById("items-body")
+    const statusSelect = document.getElementById("status-select")
+    const typeSelect = document.getElementById("type-select")
+
+    let allItems = []
+
+    function renderRows() {
+      const status = statusSelect.value
+      const type = typeSelect.value
+      const rows = allItems.filter((i) => (!status || i.status === status) && (!type || i.furniture_type === type))
+
+      tableWrap.style.display = rows.length > 0 ? "block" : "none"
+      emptyMsg.style.display = rows.length === 0 ? "block" : "none"
+
+      tbody.innerHTML = rows.map((item) => `
+        <tr>
+          <td>${item.photo_url ? `<img class="item-photo" src="${item.photo_url}" />` : `<span class="item-photo-empty"></span>`}</td>
+          <td>#${item.id}</td>
+          <td>${FURNITURE_LABEL[item.furniture_type] || item.furniture_type}</td>
+          <td>${CONDITION_LABEL[item.condition] || item.condition}</td>
+          <td>${item.estimated_price.toLocaleString()} บาท</td>
+          <td><span class="badge ${STATUS_BADGE_CLASS[item.status] || "badge-muted"}">${STATUS_LABEL[item.status] || item.status}</span></td>
+          <td>
+            <div class="edit-inline">
+              <select class="edit-type" data-id="${item.id}">
+                ${Object.entries(FURNITURE_LABEL).map(([v, l]) => `<option value="${v}" ${v === item.furniture_type ? "selected" : ""}>${l}</option>`).join("")}
+              </select>
+              <select class="edit-condition" data-id="${item.id}">
+                ${Object.entries(CONDITION_LABEL).map(([v, l]) => `<option value="${v}" ${v === item.condition ? "selected" : ""}>${l}</option>`).join("")}
+              </select>
+              <button class="btn btn-primary save-btn" data-id="${item.id}" style="padding:6px 12px; font-size:12px;">บันทึก</button>
+            </div>
+          </td>
+        </tr>
+      `).join("")
+
+      tbody.querySelectorAll(".save-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = Number(btn.dataset.id)
+          const row = btn.closest("tr")
+          const furniture_type = row.querySelector(".edit-type").value
+          const condition = row.querySelector(".edit-condition").value
+          btn.disabled = true
+          btn.textContent = "..."
+          try {
+            await updateItem(id, { furniture_type, condition })
+            toast("แก้ไขสำเร็จ ราคาคำนวณใหม่แล้ว", "success")
+            await load()
+          } catch (err) {
+            toast(`บันทึกไม่สำเร็จ: ${err.message}`, "error")
+            btn.disabled = false
+            btn.textContent = "บันทึก"
+          }
+        })
+      })
+    }
+
+    statusSelect.addEventListener("change", renderRows)
+    typeSelect.addEventListener("change", renderRows)
+
+    async function load() {
+      try {
+        allItems = await getItems()
+        allItems.sort((a, b) => b.id - a.id)
+        loadingMsg.style.display = "none"
+        renderRows()
+      } catch (err) {
+        loadingMsg.style.display = "none"
+        errorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = "block"
+      }
+    }
+  </script>
+</body>
+</html>

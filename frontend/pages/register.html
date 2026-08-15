@@ -4,125 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>สมัครสมาชิก — The Disposal Guilt</title>
+  <link rel="stylesheet" href="../css/main.css" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Sarabun', sans-serif;
-      background: #f5f5f0;
-      color: #1a1a1a;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 32px;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
-
-    .logo {
-      font-size: 13px;
-      color: #6b6b6b;
-      margin-bottom: 24px;
-      letter-spacing: 0.04em;
-    }
-
-    h1 {
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .subtitle {
-      font-size: 14px;
-      color: #6b6b6b;
-      margin-bottom: 28px;
-    }
-
-    .field { margin-bottom: 18px; }
-
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 500;
-      margin-bottom: 6px;
-      color: #3a3a3a;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      transition: border-color 0.15s;
-      background: #fff;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: #3b7dd8;
-    }
-
-    input.invalid { border-color: #dc2626; }
-    input.valid { border-color: #16a34a; }
-
     #username-hint {
       font-size: 12px;
       margin-top: 4px;
       min-height: 16px;
     }
-    #username-hint.available { color: #16a34a; }
-    #username-hint.taken { color: #dc2626; }
-
-    button[type="submit"] {
-      width: 100%;
-      padding: 13px;
-      background: #1a1a1a;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: opacity 0.15s;
-    }
-
-    button[type="submit"]:hover { opacity: 0.85; }
-    button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    #error-msg {
-      display: none;
-      background: #fff0f0;
-      border: 1px solid #fca5a5;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      color: #b91c1c;
-      margin-top: 12px;
-    }
+    #username-hint.available { color: var(--ok); }
+    #username-hint.taken { color: var(--danger); }
 
     .login-link {
       text-align: center;
       font-size: 13px;
-      color: #6b6b6b;
+      color: var(--muted);
       margin-top: 18px;
     }
-    .login-link a { color: #3b7dd8; text-decoration: none; }
+    .login-link a { color: var(--accent); text-decoration: none; }
   </style>
 </head>
-<body>
-  <div class="card">
-    <div class="logo">THE DISPOSAL GUILT</div>
+<body class="center-page">
+  <div class="auth-card">
+    <div class="logo-standalone">THE DISPOSAL GUILT</div>
     <h1>สมัครสมาชิก</h1>
     <p class="subtitle">สร้างบัญชีเพื่อเริ่มประเมินของเก่าของคุณ</p>
 
@@ -158,9 +61,9 @@
         <input type="text" name="address" id="address" autocomplete="street-address" />
       </div>
 
-      <button type="submit" id="submit-btn">สมัครสมาชิก</button>
+      <button type="submit" class="btn btn-primary btn-block" id="submit-btn">สมัครสมาชิก</button>
 
-      <div id="error-msg"></div>
+      <div class="msg msg-error" id="error-msg"></div>
     </form>
 
     <div class="login-link">

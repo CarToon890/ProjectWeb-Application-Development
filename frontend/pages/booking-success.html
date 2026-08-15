@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>จองสำเร็จ — The Disposal Guilt</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <style>
+    .page-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+    }
+
+    .success-icon { font-size: 44px; text-align: center; margin-bottom: 12px; }
+    .success-title { text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .success-sub { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-row .label { color: var(--muted); }
+    .summary-row .value { font-weight: 500; text-align: right; }
+
+    .action-row { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div id="app-nav"></div>
+
+  <div class="page-wrap">
+    <div class="auth-card">
+      <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
+      <div class="msg msg-error" id="error-msg"></div>
+
+      <div id="content" style="display: none;">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">จองสำเร็จ!</div>
+        <div class="success-sub" id="booking-id-label">-</div>
+
+        <div class="card" id="summary-card">
+          <div id="summary"></div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-primary btn-block" id="status-btn" style="margin-top: 0;">ดูสถานะการจอง</button>
+          <button class="btn btn-outline btn-block" id="home-btn" style="margin-top: 0;">กลับหน้าแรก</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    requireLogin()
+    renderNav({ root: "../", active: "" })
+
+    const bookingId = new URLSearchParams(location.search).get("id")
+
+    const loadingMsg = document.getElementById("loading-msg")
+    const errorMsg = document.getElementById("error-msg")
+    const content = document.getElementById("content")
+
+    function formatDateTime(dt) {
+      const d = new Date(dt)
+      return d.toLocaleString("th-TH", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    }
+
+    async function load() {
+      if (!bookingId) {
+        loadingMsg.style.display = "none"
+        errorMsg.textContent = "ไม่พบรหัสการจอง"
+        errorMsg.style.display = "block"
+        return
+      }
+
+      let detail
+      try {
+        detail = await getBookingDetail(bookingId)
+      } catch (err) {
+        loadingMsg.style.display = "none"
+        errorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = "block"
+        return
+      }
+
+      loadingMsg.style.display = "none"
+      content.style.display = "block"
+
+      document.getElementById("booking-id-label").textContent = `การจอง #${detail.id}`
+      document.getElementById("summary").innerHTML = `
+        <div class="summary-row"><span class="label">วันเวลานัด</span><span class="value">${formatDateTime(detail.timeslot.datetime)}</span></div>
+        <div class="summary-row"><span class="label">ทีมช่าง</span><span class="value">${detail.timeslot.technician_name}</span></div>
+        <div class="summary-row"><span class="label">ที่อยู่</span><span class="value">${detail.address}</span></div>
+        <div class="summary-row"><span class="label">ยอดที่ต้องจ่าย</span><span class="value">${detail.total_price.toLocaleString()} บาท</span></div>
+      `
+
+      document.getElementById("status-btn").addEventListener("click", () => {
+        location.href = `booking-detail.html?id=${detail.id}`
+      })
+    }
+
+    document.getElementById("home-btn").addEventListener("click", () => {
+      location.href = "../index.html"
+    })
+
+    load()
+  </script>
+</body>
+</html>

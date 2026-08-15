@@ -1,0 +1,291 @@
+/* ============================================================
+   main.css — ตัวแปรสี + reset + layout + component กลาง
+   ทุกหน้าโหลดไฟล์นี้ก่อน แล้วค่อยมี <style> เฉพาะหน้าถ้าจำเป็น
+   ============================================================ */
+
+:root {
+  --bg: #f5f5f0;
+  --surface: #fff;
+  --ink: #1a1a1a;
+  --muted: #6b6b6b;
+  --muted-2: #9a9a9a;
+  --border: #ddd;
+  --border-light: #f0f0f0;
+
+  --accent: #3b7dd8;
+  --accent-bg: #eef4ff;
+  --accent-border: #b8d1f5;
+  --accent-ink: #1a52a8;
+
+  --ok: #16a34a;
+  --ok-bg: #f0fdf4;
+  --ok-border: #86efac;
+  --ok-ink: #166534;
+
+  --danger: #b91c1c;
+  --danger-2: #dc2626;
+  --danger-bg: #fff0f0;
+  --danger-border: #fca5a5;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+body.center-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+a { color: inherit; }
+
+/* ---------- Nav ---------- */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  padding: 14px 24px;
+  box-shadow: var(--shadow-sm);
+}
+.nav .logo { font-size: 13px; color: var(--muted); letter-spacing: 0.04em; }
+.nav .links { display: flex; gap: 18px; align-items: center; font-size: 13px; }
+.nav .links a { color: #3a3a3a; text-decoration: none; }
+.nav .links a:hover { color: var(--accent); }
+.nav .links a.active { color: var(--accent); font-weight: 500; }
+.nav .logout-btn {
+  background: none; border: none; font-size: 13px; color: var(--danger);
+  cursor: pointer; font-family: inherit;
+}
+
+/* ---------- Layout ---------- */
+.container { max-width: 720px; margin: 0 auto; padding: 32px 24px; }
+.container-sm { max-width: 480px; }
+.container-md { max-width: 640px; }
+.container-lg { max-width: 960px; }
+
+.logo-standalone {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  letter-spacing: 0.04em;
+}
+
+h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+.subtitle { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+.section-title { font-size: 15px; font-weight: 600; margin: 28px 0 12px; }
+
+/* ---------- Card ---------- */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 18px;
+}
+.card h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+
+.auth-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: var(--shadow-md);
+}
+.auth-card--sm { max-width: 420px; }
+
+/* ---------- Form ---------- */
+.field { margin-bottom: 18px; }
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #3a3a3a;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--surface);
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+input:disabled { background: var(--bg); color: var(--muted-2); }
+textarea { resize: vertical; min-height: 80px; }
+
+input.valid { border-color: var(--ok); }
+input.invalid { border-color: var(--danger-2); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  padding: 11px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.85; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-primary { background: var(--ink); color: #fff; }
+.btn-danger { background: var(--danger-bg); color: var(--danger); }
+.btn-outline { background: var(--surface); border: 1.5px solid var(--border); color: var(--ink); }
+
+.btn-block { width: 100%; padding: 13px; font-size: 15px; margin-top: 8px; }
+
+/* ---------- Messages ---------- */
+.msg {
+  display: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-top: 12px;
+}
+.msg-error { background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger); }
+.msg-success { background: var(--ok-bg); border: 1px solid var(--ok-border); color: var(--ok-ink); }
+.msg-empty { background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+
+/* ---------- Badge ---------- */
+.badge {
+  display: inline-block;
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.badge-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
+.badge-ok { background: var(--ok-bg); color: var(--ok-ink); border: 1px solid var(--ok-border); }
+.badge-accent { background: var(--accent-bg); color: var(--accent-ink); border: 1px solid var(--accent-border); }
+.badge-muted { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+
+/* ---------- Empty state ---------- */
+.empty-state {
+  font-size: 13px;
+  color: var(--muted-2);
+  padding: 24px 12px;
+  text-align: center;
+}
+
+/* ---------- Stats ---------- */
+.stat-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  flex: 1;
+  min-width: 160px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.stat-value { font-size: 26px; font-weight: 700; color: var(--ok); }
+.stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* ---------- Toast (js/components.js เรียกใช้) ---------- */
+#toast-stack {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+  width: 100%;
+  max-width: 360px;
+  padding: 0 16px;
+}
+.toast {
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  box-shadow: var(--shadow-md);
+  animation: toast-in 0.15s ease-out;
+}
+.toast-info { background: var(--ink); color: #fff; }
+.toast-error { background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger); }
+.toast-success { background: var(--ok-bg); border: 1px solid var(--ok-border); color: var(--ok-ink); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Modal (js/components.js confirmDialog เรียกใช้) ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 24px;
+}
+.modal-box {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow-md);
+}
+.modal-message { font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-actions .btn { padding: 9px 18px; font-size: 13px; }
+
+/* ---------- Table (หน้า admin) ---------- */
+.table-wrap {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+table.data-table th, table.data-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-light); }
+table.data-table th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.02em; }
+table.data-table tbody tr:last-child td { border-bottom: none; }
+table.data-table tbody tr:hover { background: var(--bg); }
+table.data-table select.inline-select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+}
+.table-actions { display: flex; gap: 6px; }
+.table-actions .btn { padding: 6px 12px; font-size: 12px; }
+
+/* ---------- Footer ---------- */
+.footer-text {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted-2);
+  padding: 24px;
+}

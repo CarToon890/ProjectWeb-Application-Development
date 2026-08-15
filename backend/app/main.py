@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 
 from app.database import create_db_and_tables, engine
-from app.routers import auth, bookings, eco, items, products, users
+from app.routers import auth, bookings, eco, items, products, staff, uploads, users
 from app.seed import seed_data
 
 
@@ -34,5 +34,7 @@ app.include_router(items.router, prefix="/api", tags=["items"])
 app.include_router(products.router, prefix="/api", tags=["products"])
 app.include_router(bookings.router, prefix="/api", tags=["bookings"])
 app.include_router(eco.router, prefix="/api", tags=["eco"])
+app.include_router(uploads.router, prefix="/api", tags=["uploads"])
+app.include_router(staff.router, prefix="/api", tags=["staff"])
 
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

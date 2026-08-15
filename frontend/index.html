@@ -4,112 +4,87 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Disposal Guilt — ทิ้งก็เสียดาย ขายก็ลำบาก</title>
+  <link rel="stylesheet" href="css/main.css" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Sarabun', sans-serif;
-      background: #f5f5f0;
-      color: #1a1a1a;
-      min-height: 100vh;
-    }
-
     .hero {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
-      min-height: 100vh;
+      min-height: calc(100vh - 53px);
       padding: 24px;
     }
 
-    .logo {
-      font-size: 13px;
-      color: #6b6b6b;
-      margin-bottom: 24px;
-      letter-spacing: 0.04em;
-    }
-
-    h1 {
+    .hero h1 {
       font-size: 32px;
       font-weight: 700;
       max-width: 560px;
       margin-bottom: 12px;
     }
 
-    .tagline {
-      font-size: 16px;
-      color: #6b6b6b;
-      margin-bottom: 8px;
-    }
+    .tagline { font-size: 16px; color: var(--muted); margin-bottom: 8px; }
 
     .pain-point {
       font-size: 14px;
-      color: #9a9a9a;
+      color: var(--muted-2);
       max-width: 480px;
       margin-bottom: 32px;
     }
 
-    .cta {
-      padding: 14px 32px;
-      background: #1a1a1a;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-    .cta:hover { opacity: 0.85; }
+    .hero .stats { margin-top: 48px; max-width: 480px; }
 
-    .stats {
-      display: flex;
-      gap: 32px;
-      margin-top: 48px;
-      flex-wrap: wrap;
-      justify-content: center;
+    .pain-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 720px;
+      margin-top: 40px;
     }
-
-    .stat-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px 28px;
-      min-width: 140px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    @media (max-width: 640px) {
+      .pain-grid { grid-template-columns: 1fr; }
     }
-
-    .stat-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: #16a34a;
+    .pain-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 20px 18px;
+      box-shadow: var(--shadow);
+      text-align: center;
     }
-
-    .stat-label {
-      font-size: 12px;
-      color: #6b6b6b;
-      margin-top: 4px;
-    }
-
-    .nav-links {
-      margin-top: 24px;
-      font-size: 13px;
-      color: #6b6b6b;
-    }
-    .nav-links a { color: #3b7dd8; text-decoration: none; margin: 0 6px; }
+    .pain-card .icon { font-size: 26px; margin-bottom: 8px; }
+    .pain-card .title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .pain-card .desc { font-size: 12px; color: var(--muted); }
   </style>
 </head>
 <body>
+  <div id="app-nav"></div>
+
   <div class="hero">
-    <div class="logo">THE DISPOSAL GUILT</div>
     <h1>ทิ้งก็เสียดาย ขายก็ลำบาก</h1>
-    <p class="tagline">ประเมินราคาของเก่า แลกเป็นส่วนลดซื้อของใหม่ ให้ช่างมารับพร้อมส่งของในนัดเดียว</p>
-    <p class="pain-point">ไม่ต้องหาที่ทิ้ง ไม่ต้องเสียค่าขนแพงๆ และไม่ต้องนัดสองรอบอีกต่อไป</p>
+    <p class="tagline">รับจบในรอบเดียว: ส่งของใหม่ + ขนของเก่าออกให้ ในนัดหมายเดียวกัน</p>
+    <p class="pain-point">ประเมินราคาของเก่า แลกเป็นส่วนลดซื้อของใหม่ ให้ช่างมารับพร้อมส่งของโดยไม่ต้องนัดสองรอบ</p>
 
-    <button class="cta" id="start-btn">เริ่มประเมินของเก่า</button>
+    <button class="btn btn-primary" id="start-btn">เริ่มประเมินของเก่า</button>
 
-    <div class="stats" id="stats" style="display: none;">
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="icon">🗑️</div>
+        <div class="title">ไม่ต้องหาที่ทิ้ง</div>
+        <div class="desc">ช่างมารับของเก่าถึงบ้าน ไม่ต้องเสียเวลาหาที่ทิ้งเอง</div>
+      </div>
+      <div class="pain-card">
+        <div class="icon">🚚</div>
+        <div class="title">ไม่ต้องจ้างรถ</div>
+        <div class="desc">รับของเก่าและส่งของใหม่ในรอบเดียวกัน ไม่ต้องจ้างรถขนแยก</div>
+      </div>
+      <div class="pain-card">
+        <div class="icon">💸</div>
+        <div class="title">ได้ส่วนลด</div>
+        <div class="desc">ราคาประเมินของเก่ากลายเป็นส่วนลดซื้อของใหม่ทันที</div>
+      </div>
+    </div>
+
+    <div class="stat-row stats" id="stats" style="display: none;">
       <div class="stat-card">
         <div class="stat-value" id="stat-items">-</div>
         <div class="stat-label">ชิ้นที่ถูกส่งต่อแล้ว</div>
@@ -119,19 +94,17 @@
         <div class="stat-label">กก. CO₂ ที่ประหยัดได้</div>
       </div>
     </div>
-
-    <div class="nav-links">
-      <a href="pages/login.html">เข้าสู่ระบบ</a> ·
-      <a href="pages/register.html">สมัครสมาชิก</a>
-    </div>
   </div>
 
   <script src="js/api.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/components.js"></script>
   <script>
+    renderNav({ root: "", active: "home" })
+
     // ปุ่มเริ่มประเมิน: ล็อกอินแล้วไปหน้าประเมินได้เลย ยังไม่ล็อกอินก็ไปหน้า login ก่อน
     document.getElementById('start-btn').addEventListener('click', () => {
-      location.href = isLoggedIn() ? 'pages/assessment-form.html' : 'pages/login.html'
+      location.href = isLoggedIn() ? 'pages/assessment-form.html' : 'pages/login.html?next=assessment-form.html'
     })
 
     // โชว์ตัวเลขรวมของระบบเพื่อสร้างแรงจูงใจ (ไม่ต้องล็อกอิน)

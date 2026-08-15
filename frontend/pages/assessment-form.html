@@ -4,75 +4,38 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ประเมินเฟอร์นิเจอร์ — The Disposal Guilt</title>
+  <link rel="stylesheet" href="../css/main.css" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Sarabun', sans-serif;
-      background: #f5f5f0;
-      color: #1a1a1a;
-      min-height: 100vh;
+    .page-wrap {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 32px 24px;
     }
 
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 32px;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    @media (max-width: 480px) {
+      .type-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
-    .logo {
-      font-size: 13px;
-      color: #6b6b6b;
-      margin-bottom: 24px;
-      letter-spacing: 0.04em;
+    .type-btn {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 6px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 12px;
+      background: var(--surface);
+      transition: all 0.15s;
+      user-select: none;
     }
-
-    h1 {
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .subtitle {
-      font-size: 14px;
-      color: #6b6b6b;
-      margin-bottom: 28px;
-    }
-
-    .field { margin-bottom: 18px; }
-
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 500;
-      margin-bottom: 6px;
-      color: #3a3a3a;
-    }
-
-    select, input, textarea {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      transition: border-color 0.15s;
-      background: #fff;
-    }
-
-    select:focus, input:focus, textarea:focus {
-      outline: none;
-      border-color: #3b7dd8;
-    }
-
-    textarea { resize: vertical; min-height: 80px; }
+    .type-btn .emoji { font-size: 20px; display: block; margin-bottom: 4px; }
+    .type-btn:hover { border-color: var(--accent); }
+    .type-btn.selected { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-ink); font-weight: 500; }
 
     .condition-grid {
       display: grid;
@@ -81,137 +44,219 @@
     }
 
     .condition-btn {
-      border: 1.5px solid #ddd;
-      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
       padding: 10px 8px;
       text-align: center;
       cursor: pointer;
       font-size: 13px;
-      background: #fff;
+      background: var(--surface);
       transition: all 0.15s;
       user-select: none;
     }
 
     .condition-btn .emoji { font-size: 20px; display: block; margin-bottom: 4px; }
-    .condition-btn:hover { border-color: #3b7dd8; }
-    .condition-btn.selected { border-color: #3b7dd8; background: #eef4ff; color: #1a52a8; font-weight: 500; }
+    .condition-btn .cond-desc { font-size: 10px; color: var(--muted-2); display: block; margin-top: 3px; font-weight: 400; line-height: 1.3; }
+    .condition-btn:hover { border-color: var(--accent); }
+    .condition-btn.selected { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-ink); font-weight: 500; }
+    .condition-btn.selected .cond-desc { color: var(--accent-ink); }
 
     /* ซ่อน input จริงไว้ใต้ปุ่ม */
-    input[name="condition"] { display: none; }
+    input[name="furniture_type"], input[name="condition"] { display: none; }
 
-    button[type="submit"] {
-      width: 100%;
-      padding: 13px;
-      background: #1a1a1a;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: opacity 0.15s;
-    }
-
-    button[type="submit"]:hover { opacity: 0.85; }
-    button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* แสดง error */
-    #error-msg {
-      display: none;
-      background: #fff0f0;
-      border: 1px solid #fca5a5;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      color: #b91c1c;
-      margin-top: 12px;
-    }
-
-    /* แสดงสำเร็จ */
-    #success-msg {
-      display: none;
-      background: #f0fdf4;
-      border: 1px solid #86efac;
-      border-radius: 8px;
-      padding: 14px;
-      font-size: 14px;
-      color: #166534;
-      margin-top: 12px;
+    .price-preview {
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
       text-align: center;
+      margin-bottom: 18px;
+      display: none;
     }
+    .price-preview .value { font-size: 20px; font-weight: 700; color: var(--accent-ink); }
+    .price-preview .label { font-size: 11px; color: var(--accent-ink); opacity: 0.85; }
+
+    .photo-upload-area {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .photo-upload-area:hover { border-color: var(--accent); }
+    .photo-upload-area .hint { font-size: 12px; color: var(--muted-2); }
+    .photo-preview {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      display: none;
+      margin-bottom: 10px;
+    }
+    .photo-status { font-size: 12px; margin-top: 6px; display: none; }
+    .photo-status.uploading { color: var(--muted); }
+    .photo-status.done { color: var(--ok-ink); }
+    .photo-status.failed { color: var(--danger); }
 
     #success-msg strong { display: block; font-size: 16px; margin-bottom: 4px; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="logo">THE DISPOSAL GUILT</div>
-    <h1>ประเมินของเก่าของคุณ</h1>
-    <p class="subtitle">กรอกข้อมูลเฟอร์นิเจอร์เพื่อรับราคาประเมิน</p>
+  <div id="app-nav"></div>
 
-    <form id="assessment-form">
+  <div class="page-wrap">
+    <div class="auth-card">
+      <div class="logo-standalone">THE DISPOSAL GUILT</div>
+      <h1>ประเมินของเก่าของคุณ</h1>
+      <p class="subtitle">กรอกข้อมูลเฟอร์นิเจอร์เพื่อรับราคาประเมิน</p>
 
-      <!-- ประเภทเฟอร์นิเจอร์ -->
-      <div class="field">
-        <label for="furniture_type">ประเภทเฟอร์นิเจอร์</label>
-        <select name="furniture_type" id="furniture_type" required>
-          <option value="">เลือกประเภท...</option>
-          <option value="sofa">โซฟา</option>
-          <option value="table">โต๊ะ</option>
-          <option value="chair">เก้าอี้</option>
-          <option value="bed">เตียง</option>
-          <option value="wardrobe">ตู้เสื้อผ้า</option>
-          <option value="shelf">ชั้นวางของ</option>
-          <option value="other">อื่นๆ</option>
-        </select>
-      </div>
+      <form id="assessment-form">
 
-      <!-- สภาพ -->
-      <div class="field">
-        <label>สภาพสินค้า</label>
-        <div class="condition-grid">
-          <div class="condition-btn" onclick="selectCondition('good', this)">
-            <span class="emoji">😊</span>ดี
-          </div>
-          <div class="condition-btn" onclick="selectCondition('fair', this)">
-            <span class="emoji">😐</span>พอใช้
-          </div>
-          <div class="condition-btn" onclick="selectCondition('poor', this)">
-            <span class="emoji">😔</span>ทรุดโทรม
-          </div>
+        <!-- ประเภทเฟอร์นิเจอร์ -->
+        <div class="field">
+          <label>ประเภทเฟอร์นิเจอร์</label>
+          <div class="type-grid" id="type-grid"></div>
+          <input type="text" name="furniture_type" id="furniture_type" required />
         </div>
-        <!-- input ซ่อน เก็บค่าจริง -->
-        <input type="text" name="condition" id="condition" required />
-      </div>
 
-      <!-- รายละเอียด -->
-      <div class="field">
-        <label for="description">รายละเอียดเพิ่มเติม (ไม่บังคับ)</label>
-        <textarea name="description" id="description"
-          placeholder="เช่น โซฟา 3 ที่นั่ง สีเทา ขาไม้ ใช้มา 5 ปี"></textarea>
-      </div>
+        <!-- สภาพ -->
+        <div class="field">
+          <label>สภาพสินค้า</label>
+          <div class="condition-grid" id="condition-grid"></div>
+          <input type="text" name="condition" id="condition" required />
+        </div>
 
-      <button type="submit" id="submit-btn">ส่งข้อมูลประเมิน</button>
+        <div class="price-preview" id="price-preview">
+          <div class="value" id="price-preview-value">-</div>
+          <div class="label">ราคาประเมินโดยประมาณ</div>
+        </div>
 
-      <div id="error-msg"></div>
-      <div id="success-msg"></div>
-    </form>
+        <!-- รูปประกอบ -->
+        <div class="field">
+          <label>รูปประกอบ (ไม่บังคับ)</label>
+          <img class="photo-preview" id="photo-preview" />
+          <div class="photo-upload-area" id="photo-upload-area">
+            <div class="hint">แตะเพื่อเลือกรูปถ่ายเฟอร์นิเจอร์</div>
+          </div>
+          <input type="file" id="photo-input" accept="image/*" style="display: none;" />
+          <div class="photo-status" id="photo-status"></div>
+        </div>
+
+        <!-- รายละเอียด -->
+        <div class="field">
+          <label for="description">รายละเอียดเพิ่มเติม (ไม่บังคับ)</label>
+          <textarea name="description" id="description"
+            placeholder="เช่น โซฟา 3 ที่นั่ง สีเทา ขาไม้ ใช้มา 5 ปี"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">ส่งข้อมูลประเมิน</button>
+
+        <div class="msg msg-error" id="error-msg"></div>
+        <div class="msg msg-success" id="success-msg"></div>
+      </form>
+    </div>
   </div>
 
   <!-- โหลด api.js ก่อน (มีฟังก์ชัน createItem) แล้วค่อย auth.js (มี requireLogin) -->
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/components.js"></script>
   <script>
     // หน้านี้ต้องล็อกอินก่อนใช้งาน — ไม่มี token ให้เด้งไปหน้า login
     requireLogin()
+    renderNav({ root: "../", active: "assess" })
 
-    // เลือกสภาพ: อัพเดต class ปุ่ม + ค่าใน input ซ่อน
-    function selectCondition(value, el) {
-      document.querySelectorAll('.condition-btn').forEach(b => b.classList.remove('selected'))
-      el.classList.add('selected')
-      document.getElementById('condition').value = value
+    const FURNITURE_TYPES = [
+      ["sofa", "โซฟา", "🛋️"], ["table", "โต๊ะ", "🍽️"], ["chair", "เก้าอี้", "🪑"], ["bed", "เตียง", "🛏️"],
+      ["wardrobe", "ตู้เสื้อผ้า", "🚪"], ["shelf", "ชั้นวางของ", "📚"], ["other", "อื่นๆ", "📦"],
+    ]
+    const CONDITIONS = [
+      ["good", "ดี", "😊", "ใช้งานได้ปกติ ไม่มีตำหนิเด่นชัด"],
+      ["fair", "พอใช้", "😐", "มีร่องรอยการใช้งานบ้าง แต่ยังใช้งานได้ดี"],
+      ["poor", "ทรุดโทรม", "😔", "มีตำหนิชัดเจน หรือใช้งานมานาน"],
+    ]
+
+    // สูตรเดียวกับฝั่ง backend (items.py) — ใช้แค่พรีวิวราคาให้ผู้ใช้เห็นก่อนส่งจริง
+    const BASE_PRICE = { sofa: 3000, bed: 2500, wardrobe: 2000, table: 1500, chair: 800, shelf: 1000, other: 500 }
+    const CONDITION_MULT = { good: 0.5, fair: 0.3, poor: 0.1 }
+
+    const typeGrid = document.getElementById("type-grid")
+    const conditionGrid = document.getElementById("condition-grid")
+    const typeInput = document.getElementById("furniture_type")
+    const conditionInput = document.getElementById("condition")
+    const pricePreview = document.getElementById("price-preview")
+    const pricePreviewValue = document.getElementById("price-preview-value")
+
+    function updatePricePreview() {
+      const base = BASE_PRICE[typeInput.value]
+      const mult = CONDITION_MULT[conditionInput.value]
+      if (base === undefined || mult === undefined) {
+        pricePreview.style.display = "none"
+        return
+      }
+      pricePreviewValue.textContent = `${Math.round(base * mult).toLocaleString()} บาท`
+      pricePreview.style.display = "block"
     }
+
+    typeGrid.innerHTML = FURNITURE_TYPES.map(([value, label, emoji]) => `
+      <div class="type-btn" data-value="${value}"><span class="emoji">${emoji}</span>${label}</div>
+    `).join("")
+    typeGrid.querySelectorAll(".type-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        typeGrid.querySelectorAll(".type-btn").forEach((b) => b.classList.remove("selected"))
+        btn.classList.add("selected")
+        typeInput.value = btn.dataset.value
+        updatePricePreview()
+      })
+    })
+
+    conditionGrid.innerHTML = CONDITIONS.map(([value, label, emoji, desc]) => `
+      <div class="condition-btn" data-value="${value}"><span class="emoji">${emoji}</span>${label}<span class="cond-desc">${desc}</span></div>
+    `).join("")
+    conditionGrid.querySelectorAll(".condition-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        conditionGrid.querySelectorAll(".condition-btn").forEach((b) => b.classList.remove("selected"))
+        btn.classList.add("selected")
+        conditionInput.value = btn.dataset.value
+        updatePricePreview()
+      })
+    })
+
+    // อัปโหลดรูปทันทีตอนเลือกไฟล์ (preview ก่อนอัปโหลดเสร็จด้วย object URL)
+    let uploadedPhotoUrl = null
+    let photoUploading = false
+    const photoInput = document.getElementById("photo-input")
+    const photoPreview = document.getElementById("photo-preview")
+    const photoStatus = document.getElementById("photo-status")
+
+    document.getElementById("photo-upload-area").addEventListener("click", () => photoInput.click())
+
+    photoInput.addEventListener("change", async () => {
+      const file = photoInput.files[0]
+      if (!file) return
+
+      photoPreview.src = URL.createObjectURL(file)
+      photoPreview.style.display = "block"
+
+      uploadedPhotoUrl = null
+      photoUploading = true
+      photoStatus.textContent = "กำลังอัปโหลดรูป..."
+      photoStatus.className = "photo-status uploading"
+      photoStatus.style.display = "block"
+
+      try {
+        const result = await uploadImage(file)
+        uploadedPhotoUrl = result.url
+        photoStatus.textContent = "อัปโหลดรูปสำเร็จ"
+        photoStatus.className = "photo-status done"
+      } catch (err) {
+        photoStatus.textContent = `อัปโหลดรูปไม่สำเร็จ: ${err.message}`
+        photoStatus.className = "photo-status failed"
+      } finally {
+        photoUploading = false
+      }
+    })
 
     const form = document.getElementById('assessment-form')
     const submitBtn = document.getElementById('submit-btn')
@@ -225,10 +270,18 @@
       errorMsg.style.display = 'none'
       successMsg.style.display = 'none'
 
-      // ตรวจว่าเลือกสภาพแล้วหรือยัง
-      const condition = document.getElementById('condition').value
-      if (!condition) {
+      if (!typeInput.value) {
+        errorMsg.textContent = 'กรุณาเลือกประเภทเฟอร์นิเจอร์ก่อน'
+        errorMsg.style.display = 'block'
+        return
+      }
+      if (!conditionInput.value) {
         errorMsg.textContent = 'กรุณาเลือกสภาพสินค้าก่อน'
+        errorMsg.style.display = 'block'
+        return
+      }
+      if (photoUploading) {
+        errorMsg.textContent = 'กรุณารอให้อัปโหลดรูปเสร็จก่อน'
         errorMsg.style.display = 'block'
         return
       }
@@ -240,23 +293,23 @@
       try {
         // เรียก POST /api/items ผ่าน api.js
         const item = await createItem({
-          furniture_type: form.furniture_type.value,
-          condition: condition,
+          furniture_type: typeInput.value,
+          condition: conditionInput.value,
           description: form.description.value || null,
+          photo_url: uploadedPhotoUrl,
         })
 
-        // สำเร็จ — แสดงราคาประเมินและไปหน้าเลือกของใหม่
+        // สำเร็จ — แสดงราคาประเมินและไปหน้าผลประเมิน
         successMsg.innerHTML = `
           <strong>ส่งข้อมูลสำเร็จ! 🎉</strong>
           ราคาประเมิน: <code>${item.estimated_price.toLocaleString()} บาท</code><br>
-          <small>กำลังพาไปเลือกของใหม่...</small>
+          <small>กำลังพาไปดูผลประเมิน...</small>
         `
         successMsg.style.display = 'block'
 
-        // รอ 1.5 วิ แล้ว redirect พร้อม item_id ไปหน้าเลือกของใหม่ (Step 2)
         setTimeout(() => {
-          location.href = `products.html?item_id=${item.id}`
-        }, 1500)
+          location.href = `assessment-result.html?id=${item.id}`
+        }, 1200)
 
       } catch (err) {
         // แสดง error บนหน้า
