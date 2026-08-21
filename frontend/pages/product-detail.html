@@ -6,155 +6,224 @@
   <title>รายละเอียดสินค้า — The Disposal Guilt</title>
   <link rel="stylesheet" href="../css/main.css" />
   <style>
-    .detail-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-    @media (max-width: 640px) {
-      .detail-grid { grid-template-columns: 1fr; }
-    }
-
-    .product-photo {
+    .product-hero-photo {
       width: 100%;
-      height: 280px;
+      height: 380px;
       object-fit: cover;
-      border-radius: var(--radius-md);
-      background: var(--bg);
+      border-radius: var(--radius-xl);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: var(--sp-6);
     }
-
-    .product-category { font-size: 12px; color: var(--muted-2); margin-bottom: 4px; }
-    .product-stock { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
 
     .calc-row {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       font-size: 14px;
-      padding: 8px 0;
+      padding: var(--sp-3) 0;
       border-bottom: 1px solid var(--border-light);
     }
-    .calc-row.total { border-bottom: none; padding-top: 12px; font-size: 17px; font-weight: 700; }
-    .calc-row.total .value { color: var(--ok); }
-    .calc-row.total .value.negative { color: var(--danger); }
+    .calc-row:last-child { border-bottom: none; }
+    .calc-row.total {
+      border-top: 2px dashed var(--border);
+      margin-top: var(--sp-2);
+      padding-top: var(--sp-4);
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .calc-row.total .value { color: var(--accent); }
+    .calc-row.total .value.discounted { color: var(--ok); }
+    .calc-row.total .value.negative { color: var(--ok); }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--sp-3);
+      padding: var(--sp-3) 0;
+      font-size: 13px;
+    }
+    .feature-item svg { width: 18px; height: 18px; color: var(--ok); flex-shrink: 0; margin-top: 2px; }
   </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
-  <div class="container container-lg">
-    <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
-    <div class="msg msg-error" id="error-msg"></div>
+  <main class="main-content">
+    <div class="container-lg">
+      <!-- Stepper Wizard -->
+      <div id="app-stepper"></div>
 
-    <div class="detail-grid" id="content" style="display: none;">
-      <div>
-        <img class="product-photo" id="product-photo" />
-      </div>
-      <div>
-        <div class="product-category" id="product-category">-</div>
-        <h1 id="product-name">-</h1>
-        <p class="product-stock" id="product-stock">-</p>
+      <!-- Breadcrumbs -->
+      <div id="app-breadcrumb"></div>
 
-        <div class="card">
-          <div class="calc-row"><span>ราคาสินค้า</span><span id="calc-price">-</span></div>
-          <div class="calc-row"><span>ส่วนลดจากของเก่า</span><span id="calc-discount">-</span></div>
-          <div class="calc-row total"><span>ยอดสุทธิ</span><span class="value" id="calc-total">-</span></div>
+      <div id="loading-msg" class="empty-state">กำลังโหลดรายละเอียดสินค้า...</div>
+      <div class="msg msg-error" id="error-msg"></div>
+
+      <!-- 2-Column Split Layout -->
+      <div class="split-layout" id="content" style="display: none;">
+        <!-- Left: Product Image & Details -->
+        <div>
+          <img class="product-hero-photo" id="product-photo" onerror="this.src='https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'" />
+
+          <div class="card card-static" style="padding: var(--sp-6);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-2);">
+              <span class="badge badge-accent" id="product-category">-</span>
+              <span class="badge badge-ok" id="product-stock">-</span>
+            </div>
+            <h1 id="product-name" style="margin-bottom: var(--sp-4); font-size: 24px;">-</h1>
+            
+            <h3 style="margin-bottom: var(--sp-3); font-size: 15px;">จุดเด่นและบริการที่รวมในรายการนี้</h3>
+            <div class="feature-item">
+              <i data-lucide="truck"></i>
+              <div><strong>บริการขนส่งและติดตั้งถึงบ้าน:</strong> ช่างมืออาชีพส่งของใหม่ให้ถึงห้องที่ต้องการ</div>
+            </div>
+            <div class="feature-item">
+              <i data-lucide="recycle"></i>
+              <div><strong>บริการรับของเก่าฟรีในรอบเดียวกัน:</strong> ขนย้ายของเก่ากลับไปจัดการให้ ไม่ต้องจ้างรถแยก</div>
+            </div>
+            <div class="feature-item">
+              <i data-lucide="shield-check"></i>
+              <div><strong>รับประกันสินค้า:</strong> สินค้าใหม่คุณภาพสูงพร้อมรับประกันโครงสร้าง</div>
+            </div>
+          </div>
         </div>
 
-        <div class="msg msg-error" id="select-error-msg"></div>
-        <button class="btn btn-primary btn-block" id="select-btn" style="margin-top: 4px;">เลือกชิ้นนี้</button>
+        <!-- Right: Sticky Order & Trade-in Summary -->
+        <div class="sticky-side">
+          <div class="card card-static" style="padding: var(--sp-6); border-left-color: var(--accent);">
+            <h2 style="margin-bottom: var(--sp-4); font-size: 16px;">
+              <i data-lucide="calculator"></i> สรุปราคา & ส่วนลด Trade-in
+            </h2>
+
+            <div class="calc-row">
+              <span style="color: var(--muted);">ราคาสินค้าปกติ</span>
+              <strong id="calc-price">-</strong>
+            </div>
+
+            <div class="calc-row" id="discount-row">
+              <span style="color: var(--muted);">ส่วนลด Trade-in ของเก่า</span>
+              <span id="calc-discount" style="color: var(--ok); font-weight: 700;">- ฿0</span>
+            </div>
+
+            <div class="calc-row total">
+              <span>ยอดสุทธิที่ต้องจ่าย:</span>
+              <span class="value" id="calc-total">-</span>
+            </div>
+
+            <div id="refund-note" style="display: none; font-size: 12px; color: var(--ok); margin: var(--sp-3) 0; padding: var(--sp-2) var(--sp-3); background: var(--ok-bg); border-radius: var(--radius-sm); border: 1px solid var(--ok-border);">
+              <i data-lucide="info" style="width: 14px; height: 14px; vertical-align: middle;"></i> มูลค่าของเก่าสูงกว่าสินค้า ทางร้านจะคืนเงินส่วนต่างให้คุณ
+            </div>
+
+            <div style="margin-top: var(--sp-6); display: flex; flex-direction: column; gap: var(--sp-3);">
+              <button class="btn btn-primary btn-block btn-lg" id="select-btn">
+                <i data-lucide="calendar"></i> เลือกชิ้นนี้ (ไปเลือกเวลานัด)
+              </button>
+              <a href="products.html" class="btn btn-outline btn-block" id="back-btn">
+                <i data-lucide="arrow-left"></i> กลับไปดูสินค้าอื่น
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </main>
 
+  <div id="app-footer"></div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/components.js"></script>
   <script src="../js/flow.js"></script>
   <script>
-    requireLogin()
-    renderNav({ root: "../", active: "" })
+    renderNav({ root: "../", active: "products" })
+    renderFooter({ root: "../", dir: "pages" })
 
     const params = new URLSearchParams(location.search)
-    const productId = params.get("id")
-    const itemId = params.get("item_id") || getFlow().item_id
+    const productId = params.get('id')
+    const itemId = params.get('item_id') || getFlow().item_id
 
-    const loadingMsg = document.getElementById("loading-msg")
-    const errorMsg = document.getElementById("error-msg")
-    const content = document.getElementById("content")
-    const selectErrorMsg = document.getElementById("select-error-msg")
-
-    let estimatedPrice = 0
-    let product = null
-
-    async function loadDiscount() {
-      if (!itemId) return
-      try {
-        const item = await getItem(itemId)
-        estimatedPrice = item.estimated_price
-      } catch (err) {
-        // โหลดส่วนลดไม่ได้ก็แสดงราคาเต็มไปก่อน ไม่บล็อกหน้า
-      }
+    if (itemId) {
+      renderStepper(2)
+      document.getElementById('back-btn').href = `products.html?item_id=${itemId}`
     }
 
-    function renderCalc() {
-      const finalPrice = product.price - estimatedPrice
-      document.getElementById("calc-price").textContent = `${product.price.toLocaleString()} บาท`
-      document.getElementById("calc-discount").textContent = `-${estimatedPrice.toLocaleString()} บาท`
-      const totalEl = document.getElementById("calc-total")
-      totalEl.textContent = `${finalPrice.toLocaleString()} บาท${finalPrice < 0 ? " (ทางร้านจ่ายคืน)" : ""}`
-      totalEl.classList.toggle("negative", finalPrice < 0)
-    }
+    const loadingMsg = document.getElementById('loading-msg')
+    const errorMsg = document.getElementById('error-msg')
+    const content = document.getElementById('content')
 
-    async function load() {
-      if (!productId) {
-        loadingMsg.style.display = "none"
-        errorMsg.textContent = "ไม่พบรหัสสินค้า"
-        errorMsg.style.display = "block"
-        return
-      }
+    if (!productId) {
+      loadingMsg.style.display = 'none'
+      errorMsg.textContent = 'ไม่พบรหัสสินค้า'
+      errorMsg.style.display = 'flex'
+    } else {
+      Promise.all([
+        getProduct(productId),
+        itemId ? getItem(itemId).catch(() => null) : Promise.resolve(null),
+      ]).then(([product, item]) => {
+        loadingMsg.style.display = 'none'
 
-      await loadDiscount()
+        renderBreadcrumbs([
+          { label: 'หน้าแรก', url: '../index.html' },
+          { label: 'แคตตาล็อกสินค้า', url: `products.html${itemId ? `?item_id=${itemId}` : ''}` },
+          { label: product.name }
+        ])
 
-      try {
-        product = await getProduct(productId)
-      } catch (err) {
-        loadingMsg.style.display = "none"
-        errorMsg.textContent = `โหลดข้อมูลสินค้าไม่สำเร็จ: ${err.message}`
-        errorMsg.style.display = "block"
-        return
-      }
+        const discount = item ? item.estimated_price : 0
+        const total = product.price - discount
 
-      loadingMsg.style.display = "none"
-      content.style.display = "grid"
-
-      const photo = document.getElementById("product-photo")
-      photo.src = product.image_url || ""
-      photo.alt = product.name
-      photo.onerror = () => { photo.style.display = "none" }
-
-      document.getElementById("product-name").textContent = product.name
-      document.getElementById("product-category").textContent = product.category
-      document.getElementById("product-stock").textContent = `เหลือ ${product.stock} ชิ้น`
-      renderCalc()
-
-      const selectBtn = document.getElementById("select-btn")
-      if (product.stock <= 0) {
-        selectBtn.disabled = true
-        selectBtn.textContent = "สินค้าหมด"
-      }
-
-      selectBtn.addEventListener("click", () => {
-        if (!itemId) {
-          selectErrorMsg.textContent = "ไม่พบรายการของเก่า กรุณากลับไปประเมินของเก่าใหม่"
-          selectErrorMsg.style.display = "block"
-          return
+        if (product.image_url) {
+          document.getElementById('product-photo').src = product.image_url
         }
-        setFlow({ item_id: Number(itemId), product_id: product.id })
-        location.href = `select-datetime.html?item_id=${itemId}&product_id=${product.id}`
+        document.getElementById('product-name').textContent = product.name
+        document.getElementById('product-category').textContent = `หมวดหมู่: ${product.category}`
+        document.getElementById('product-stock').textContent = product.stock > 0 ? `มีสินค้า (${product.stock} ชิ้น)` : 'สินค้าหมด'
+        if (product.stock <= 0) {
+          document.getElementById('product-stock').className = 'badge badge-danger'
+        }
+
+        document.getElementById('calc-price').textContent = `฿${product.price.toLocaleString()} บาท`
+        document.getElementById('calc-discount').textContent = discount > 0 ? `- ฿${discount.toLocaleString()} บาท` : 'ไม่มี'
+
+        const totalEl = document.getElementById('calc-total')
+        if (discount > 0) {
+          totalEl.classList.add('discounted')
+        }
+        if (total < 0) {
+          totalEl.textContent = `฿0 (ได้เงินคืน ฿${Math.abs(total).toLocaleString()})`
+          document.getElementById('refund-note').style.display = 'block'
+        } else {
+          totalEl.textContent = `฿${total.toLocaleString()} บาท`
+        }
+
+        const selectBtn = document.getElementById('select-btn')
+        if (product.stock <= 0) {
+          selectBtn.disabled = true
+          selectBtn.textContent = 'สินค้าหมดชั่วคราว'
+        } else {
+          selectBtn.addEventListener('click', () => {
+            if (itemId) {
+              setFlow({ item_id: Number(itemId), product_id: product.id })
+              location.href = `select-datetime.html?item_id=${itemId}&product_id=${product.id}`
+            } else {
+              setFlow({ product_id: product.id })
+              location.href = `select-datetime.html?product_id=${product.id}`
+            }
+          })
+        }
+
+        content.style.display = 'grid'
+        if (typeof lucide !== 'undefined') lucide.createIcons({ nameAttr: 'data-lucide' })
+      }).catch(err => {
+        loadingMsg.style.display = 'none'
+        errorMsg.textContent = `โหลดรายละเอียดสินค้าไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = 'flex'
       })
     }
 
-    load()
+    initPage()
   </script>
 </body>
 </html>

@@ -6,76 +6,107 @@
   <title>จัดการสินค้า — Admin</title>
   <link rel="stylesheet" href="../css/main.css" />
   <style>
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-    .form-grid .field { margin-bottom: 0; }
-
-    .stock-cell { display: flex; align-items: center; gap: 6px; }
-    .stock-cell input {
-      width: 64px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px;
-      font-size: 13px; font-family: inherit;
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-4); }
+    .stock-input {
+      width: 70px;
+      padding: 6px 8px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
-  <div class="container container-lg">
-    <h1>จัดการสินค้า</h1>
-    <p class="subtitle">เพิ่ม แก้ไข ลบสินค้า และจัดการสต๊อก</p>
-
-    <div class="card">
-      <h2 id="form-title">เพิ่มสินค้าใหม่</h2>
-      <form id="product-form">
-        <div class="form-grid">
-          <div class="field">
-            <label for="p-name">ชื่อสินค้า</label>
-            <input type="text" id="p-name" required />
-          </div>
-          <div class="field">
-            <label for="p-category">หมวดหมู่</label>
-            <select id="p-category" required>
-              <option value="sofa">โซฟา</option>
-              <option value="table">โต๊ะ</option>
-              <option value="chair">เก้าอี้</option>
-              <option value="bed">เตียง</option>
-              <option value="wardrobe">ตู้เสื้อผ้า</option>
-              <option value="shelf">ชั้นวางของ</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="p-price">ราคา (บาท)</label>
-            <input type="number" id="p-price" min="0" required />
-          </div>
-          <div class="field">
-            <label for="p-stock">สต๊อก</label>
-            <input type="number" id="p-stock" min="0" required />
-          </div>
-          <div class="field" style="grid-column: 1 / -1;">
-            <label for="p-image">URL รูปภาพ (ไม่บังคับ)</label>
-            <input type="text" id="p-image" placeholder="/static/products/xxx.jpg" />
-          </div>
+  <main class="main-content">
+    <div class="container-xl">
+      <div class="page-header">
+        <div class="page-header-main">
+          <h1><i data-lucide="package" style="vertical-align: middle; color: var(--accent); margin-right: 8px;"></i>จัดการแคตตาล็อกสินค้า</h1>
+          <p class="subtitle" style="margin-bottom: 0;">เพิ่ม แก้ไข ลบสินค้า และปรับสต๊อกสินค้าที่วางจำหน่าย</p>
         </div>
-        <div class="msg msg-error" id="form-error"></div>
-        <div style="display:flex; gap:8px; margin-top:16px;">
-          <button type="submit" class="btn btn-primary" id="submit-btn">เพิ่มสินค้า</button>
-          <button type="button" class="btn btn-outline" id="cancel-edit-btn" style="display:none;">ยกเลิกแก้ไข</button>
-        </div>
-      </form>
+      </div>
+
+      <!-- Add/Edit Product Panel -->
+      <div class="card card-static" style="margin-bottom: var(--sp-8); border-left-color: var(--accent);">
+        <h2 id="form-title" style="margin-bottom: var(--sp-4); font-size: 16px;">
+          <i data-lucide="plus-circle"></i> เพิ่มสินค้าใหม่
+        </h2>
+        <form id="product-form">
+          <div class="form-grid">
+            <div class="field" style="margin-bottom: 0;">
+              <label for="p-name">ชื่อสินค้า</label>
+              <input type="text" id="p-name" required placeholder="เช่น โซฟา 3 ที่นั่ง รุ่น Nordic" />
+            </div>
+            <div class="field" style="margin-bottom: 0;">
+              <label for="p-category">หมวดหมู่</label>
+              <select id="p-category" required>
+                <option value="sofa">โซฟา</option>
+                <option value="table">โต๊ะ</option>
+                <option value="chair">เก้าอี้</option>
+                <option value="bed">เตียง</option>
+                <option value="wardrobe">ตู้เสื้อผ้า</option>
+                <option value="shelf">ชั้นวางของ</option>
+              </select>
+            </div>
+            <div class="field" style="margin-bottom: 0;">
+              <label for="p-price">ราคาจำหน่าย (บาท)</label>
+              <input type="number" id="p-price" min="0" required placeholder="12900" />
+            </div>
+            <div class="field" style="margin-bottom: 0;">
+              <label for="p-stock">จำนวนสต๊อก (ชิ้น)</label>
+              <input type="number" id="p-stock" min="0" required placeholder="5" />
+            </div>
+            <div class="field" style="grid-column: 1 / -1; margin-bottom: 0;">
+              <label for="p-image">URL รูปภาพสินค้า</label>
+              <input type="text" id="p-image" placeholder="https://... หรือ /static/products/xxx.jpg" />
+            </div>
+          </div>
+          <div class="msg msg-error" id="form-error"></div>
+          <div style="display: flex; gap: 8px; margin-top: var(--sp-4);">
+            <button type="submit" class="btn btn-primary" id="submit-btn">
+              <i data-lucide="plus"></i> บันทึกข้อมูลสินค้า
+            </button>
+            <button type="button" class="btn btn-outline" id="cancel-btn" style="display: none;">ยกเลิก</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Product List Table -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-3);">
+        <h2 style="font-size: 16px; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="list"></i> รายการสินค้าทั้งหมดในระบบ
+        </h2>
+        <span class="badge badge-accent" id="product-count-badge">- ชิ้น</span>
+      </div>
+
+      <div id="loading-msg" class="empty-state">กำลังโหลดรายการสินค้า...</div>
+      <div class="msg msg-error" id="error-msg"></div>
+
+      <div class="table-wrap" id="table-wrap" style="display: none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>ชื่อสินค้า</th>
+              <th>หมวดหมู่</th>
+              <th>ราคา</th>
+              <th>สต๊อก</th>
+              <th>จัดการสต๊อก</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="products-body"></tbody>
+        </table>
+      </div>
     </div>
+  </main>
 
-    <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
-    <div class="msg msg-error" id="error-msg"></div>
+  <div id="app-footer"></div>
 
-    <div class="table-wrap" id="table-wrap" style="display: none;">
-      <table class="data-table">
-        <thead>
-          <tr><th>#</th><th>ชื่อ</th><th>หมวดหมู่</th><th>ราคา</th><th>สต๊อก</th><th>จัดการ</th></tr>
-        </thead>
-        <tbody id="products-body"></tbody>
-      </table>
-    </div>
-  </div>
-
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/components.js"></script>
@@ -83,38 +114,126 @@
     ;(async () => {
       await requireRole("admin")
       renderNav({ root: "../", dir: "admin", active: "a-products" })
-      load()
+      renderFooter({ root: "../", dir: "admin" })
+      await loadProducts()
+      initPage()
     })()
 
-    const CATEGORY_LABEL = { sofa: "โซฟา", table: "โต๊ะ", chair: "เก้าอี้", bed: "เตียง", wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ" }
+    const CATEGORY_LABEL = {
+      sofa: "โซฟา", table: "โต๊ะ", chair: "เก้าอี้", bed: "เตียง",
+      wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ",
+    }
 
+    const tbody = document.getElementById("products-body")
+    const tableWrap = document.getElementById("table-wrap")
     const loadingMsg = document.getElementById("loading-msg")
     const errorMsg = document.getElementById("error-msg")
-    const tableWrap = document.getElementById("table-wrap")
-    const tbody = document.getElementById("products-body")
-
-    const form = document.getElementById("product-form")
     const formTitle = document.getElementById("form-title")
-    const formError = document.getElementById("form-error")
+    const form = document.getElementById("product-form")
     const submitBtn = document.getElementById("submit-btn")
-    const cancelEditBtn = document.getElementById("cancel-edit-btn")
+    const cancelBtn = document.getElementById("cancel-btn")
+    const formError = document.getElementById("form-error")
+    const countBadge = document.getElementById("product-count-badge")
 
+    let allProducts = []
     let editingId = null
 
     function resetForm() {
       editingId = null
       form.reset()
-      formTitle.textContent = "เพิ่มสินค้าใหม่"
-      submitBtn.textContent = "เพิ่มสินค้า"
-      cancelEditBtn.style.display = "none"
+      formTitle.innerHTML = '<i data-lucide="plus-circle"></i> เพิ่มสินค้าใหม่'
+      submitBtn.innerHTML = '<i data-lucide="plus"></i> บันทึกข้อมูลสินค้า'
+      cancelBtn.style.display = "none"
+      formError.style.display = "none"
+      if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
     }
 
-    cancelEditBtn.addEventListener("click", resetForm)
+    cancelBtn.addEventListener("click", resetForm)
+
+    function renderTable() {
+      countBadge.textContent = `${allProducts.length} รายการ`
+      if (allProducts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:24px;">ยังไม่มีสินค้าในระบบ</td></tr>'
+        return
+      }
+
+      tbody.innerHTML = allProducts.map((p) => `
+        <tr data-id="${p.id}">
+          <td><strong>#${p.id}</strong></td>
+          <td><strong>${p.name}</strong></td>
+          <td><span class="badge badge-muted">${CATEGORY_LABEL[p.category] || p.category}</span></td>
+          <td>฿${p.price.toLocaleString()} บาท</td>
+          <td>
+            <span class="badge ${p.stock > 0 ? "badge-ok" : "badge-danger"}">
+              ${p.stock > 0 ? `เหลือ ${p.stock}` : "หมด"}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="number" class="stock-input" min="0" value="${p.stock}" />
+              <button class="btn btn-outline btn-sm update-stock-btn"><i data-lucide="check"></i> ปรับ</button>
+            </div>
+          </td>
+          <td>
+            <div class="table-actions">
+              <button class="btn btn-outline btn-sm edit-btn"><i data-lucide="edit-3"></i> แก้ไข</button>
+              <button class="btn btn-danger btn-sm delete-btn"><i data-lucide="trash-2"></i> ลบ</button>
+            </div>
+          </td>
+        </tr>
+      `).join("")
+
+      tbody.querySelectorAll("tr").forEach((tr) => {
+        const id = Number(tr.dataset.id)
+        const p = allProducts.find((item) => item.id === id)
+
+        tr.querySelector(".update-stock-btn").addEventListener("click", async () => {
+          const newStock = Number(tr.querySelector(".stock-input").value)
+          if (isNaN(newStock) || newStock < 0) return toast("จำนวนสต๊อกต้องเป็นตัวเลข 0 ขึ้นไป", "error")
+          try {
+            await updateProduct(id, { stock: newStock })
+            toast(`อัปเดตสต๊อกสินค้า #${id} สำเร็จ`, "success")
+            p.stock = newStock
+            renderTable()
+          } catch (err) {
+            toast(`อัปเดตไม่สำเร็จ: ${err.message}`, "error")
+          }
+        })
+
+        tr.querySelector(".edit-btn").addEventListener("click", () => {
+          editingId = id
+          document.getElementById("p-name").value = p.name
+          document.getElementById("p-category").value = p.category
+          document.getElementById("p-price").value = p.price
+          document.getElementById("p-stock").value = p.stock
+          document.getElementById("p-image").value = p.image_url || ""
+          formTitle.innerHTML = `<i data-lucide="edit-3"></i> แก้ไขสินค้า #${id}`
+          submitBtn.innerHTML = '<i data-lucide="check"></i> บันทึกการแก้ไข'
+          cancelBtn.style.display = "inline-flex"
+          form.scrollIntoView({ behavior: "smooth" })
+          if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
+        })
+
+        tr.querySelector(".delete-btn").addEventListener("click", async () => {
+          const ok = await confirmDialog(`ต้องการลบสินค้า "${p.name}" (#${id}) หรือไม่?`, { confirmLabel: "ลบ" })
+          if (!ok) return
+          try {
+            await deleteProduct(id)
+            toast("ลบสินค้าสำเร็จ", "success")
+            allProducts = allProducts.filter((item) => item.id !== id)
+            renderTable()
+          } catch (err) {
+            toast(`ลบไม่สำเร็จ: ${err.message}`, "error")
+          }
+        })
+      })
+
+      if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
+    }
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault()
       formError.style.display = "none"
-      submitBtn.disabled = true
 
       const data = {
         name: document.getElementById("p-name").value.trim(),
@@ -124,104 +243,39 @@
         image_url: document.getElementById("p-image").value.trim() || null,
       }
 
+      submitBtn.disabled = true
       try {
         if (editingId) {
-          await updateProduct(editingId, data)
+          const updated = await updateProduct(editingId, data)
           toast("แก้ไขสินค้าสำเร็จ", "success")
+          const idx = allProducts.findIndex((p) => p.id === editingId)
+          if (idx !== -1) allProducts[idx] = updated
         } else {
-          await createProduct(data)
+          const created = await createProduct(data)
           toast("เพิ่มสินค้าสำเร็จ", "success")
+          allProducts.unshift(created)
         }
         resetForm()
-        await load()
+        renderTable()
       } catch (err) {
-        formError.textContent = `บันทึกไม่สำเร็จ: ${err.message}`
-        formError.style.display = "block"
+        formError.textContent = err.message
+        formError.style.display = "flex"
       } finally {
         submitBtn.disabled = false
       }
     })
 
-    function startEdit(product) {
-      editingId = product.id
-      document.getElementById("p-name").value = product.name
-      document.getElementById("p-category").value = product.category
-      document.getElementById("p-price").value = product.price
-      document.getElementById("p-stock").value = product.stock
-      document.getElementById("p-image").value = product.image_url || ""
-      formTitle.textContent = `แก้ไขสินค้า #${product.id}`
-      submitBtn.textContent = "บันทึกการแก้ไข"
-      cancelEditBtn.style.display = "inline-block"
-      window.scrollTo({ top: 0, behavior: "smooth" })
-    }
-
-    async function renderRows() {
-      const products = await getProducts()
-      products.sort((a, b) => b.id - a.id)
-
-      tableWrap.style.display = "block"
-      tbody.innerHTML = products.map((p) => `
-        <tr>
-          <td>#${p.id}</td>
-          <td>${p.name}</td>
-          <td>${CATEGORY_LABEL[p.category] || p.category}</td>
-          <td>${p.price.toLocaleString()} บาท</td>
-          <td>
-            <div class="stock-cell">
-              <input type="number" min="0" class="stock-input" data-id="${p.id}" value="${p.stock}" />
-            </div>
-          </td>
-          <td class="table-actions">
-            <button class="btn btn-outline edit-btn" data-id="${p.id}">แก้ไข</button>
-            <button class="btn btn-danger delete-btn" data-id="${p.id}">ลบ</button>
-          </td>
-        </tr>
-      `).join("") || `<tr><td colspan="6" style="text-align:center; color:var(--muted-2);">ยังไม่มีสินค้า</td></tr>`
-
-      tbody.querySelectorAll(".stock-input").forEach((input) => {
-        input.addEventListener("change", async () => {
-          const id = Number(input.dataset.id)
-          try {
-            await updateProduct(id, { stock: Number(input.value) })
-            toast("อัปเดตสต๊อกสำเร็จ", "success")
-          } catch (err) {
-            toast(`อัปเดตสต๊อกไม่สำเร็จ: ${err.message}`, "error")
-          }
-        })
-      })
-
-      tbody.querySelectorAll(".edit-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const product = products.find((p) => p.id === Number(btn.dataset.id))
-          if (product) startEdit(product)
-        })
-      })
-
-      tbody.querySelectorAll(".delete-btn").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const id = Number(btn.dataset.id)
-          const product = products.find((p) => p.id === id)
-          const ok = await confirmDialog(`ต้องการลบสินค้า "${product?.name || ""}" นี้ใช่หรือไม่?`, { confirmLabel: "ลบ" })
-          if (!ok) return
-          try {
-            await deleteProduct(id)
-            toast("ลบสินค้าสำเร็จ", "success")
-            await load()
-          } catch (err) {
-            toast(`ลบไม่สำเร็จ: ${err.message}`, "error")
-          }
-        })
-      })
-    }
-
-    async function load() {
+    async function loadProducts() {
       try {
-        await renderRows()
+        allProducts = await getProducts()
+        allProducts.sort((a, b) => b.id - a.id)
         loadingMsg.style.display = "none"
+        tableWrap.style.display = "block"
+        renderTable()
       } catch (err) {
         loadingMsg.style.display = "none"
-        errorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
-        errorMsg.style.display = "block"
+        errorMsg.textContent = `โหลดสินค้าไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = "flex"
       }
     }
   </script>

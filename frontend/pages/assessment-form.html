@@ -3,181 +3,214 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ประเมินเฟอร์นิเจอร์ — The Disposal Guilt</title>
+  <title>ขั้นตอนที่ 1: ประเมินของเก่า — The Disposal Guilt</title>
   <link rel="stylesheet" href="../css/main.css" />
   <style>
-    .page-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 24px;
-    }
-
     .type-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      gap: var(--sp-2);
     }
-    @media (max-width: 480px) {
+    @media (max-width: 520px) {
       .type-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
     .type-btn {
       border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 10px 6px;
-      text-align: center;
-      cursor: pointer;
-      font-size: 12px;
-      background: var(--surface);
-      transition: all 0.15s;
-      user-select: none;
-    }
-    .type-btn .emoji { font-size: 20px; display: block; margin-bottom: 4px; }
-    .type-btn:hover { border-color: var(--accent); }
-    .type-btn.selected { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-ink); font-weight: 500; }
-
-    .condition-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .condition-btn {
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 10px 8px;
+      border-radius: var(--radius-md);
+      padding: var(--sp-3) var(--sp-2);
       text-align: center;
       cursor: pointer;
       font-size: 13px;
       background: var(--surface);
-      transition: all 0.15s;
+      transition: all var(--transition-fast);
       user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--ink);
+    }
+    .type-btn i, .type-btn svg { width: 24px; height: 24px; color: var(--muted); transition: color var(--transition-fast); }
+    .type-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .type-btn:hover i, .type-btn:hover svg { color: var(--accent); }
+    .type-btn.selected { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-ink); font-weight: 700; box-shadow: 0 0 0 2px var(--accent-border); }
+    .type-btn.selected i, .type-btn.selected svg { color: var(--accent); }
+
+    .condition-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-2);
+    }
+    @media (max-width: 520px) {
+      .condition-grid { grid-template-columns: 1fr; }
     }
 
-    .condition-btn .emoji { font-size: 20px; display: block; margin-bottom: 4px; }
-    .condition-btn .cond-desc { font-size: 10px; color: var(--muted-2); display: block; margin-top: 3px; font-weight: 400; line-height: 1.3; }
-    .condition-btn:hover { border-color: var(--accent); }
-    .condition-btn.selected { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-ink); font-weight: 500; }
-    .condition-btn.selected .cond-desc { color: var(--accent-ink); }
-
-    /* ซ่อน input จริงไว้ใต้ปุ่ม */
-    input[name="furniture_type"], input[name="condition"] { display: none; }
-
-    .price-preview {
-      background: var(--accent-bg);
-      border: 1px solid var(--accent-border);
-      border-radius: var(--radius-sm);
-      padding: 12px 14px;
-      text-align: center;
-      margin-bottom: 18px;
-      display: none;
-    }
-    .price-preview .value { font-size: 20px; font-weight: 700; color: var(--accent-ink); }
-    .price-preview .label { font-size: 11px; color: var(--accent-ink); opacity: 0.85; }
-
-    .photo-upload-area {
-      border: 1.5px dashed var(--border);
-      border-radius: var(--radius-sm);
-      padding: 16px;
+    .condition-btn {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--sp-3);
       text-align: center;
       cursor: pointer;
-      transition: border-color 0.15s;
+      font-size: 13px;
+      background: var(--surface);
+      transition: all var(--transition-fast);
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
     }
-    .photo-upload-area:hover { border-color: var(--accent); }
-    .photo-upload-area .hint { font-size: 12px; color: var(--muted-2); }
+    .condition-btn i, .condition-btn svg { width: 22px; height: 22px; margin-bottom: 4px; color: var(--muted); transition: color var(--transition-fast); }
+    .condition-btn .cond-desc { font-size: 11px; color: var(--muted); display: block; margin-top: 3px; font-weight: 400; line-height: 1.3; }
+    .condition-btn:hover { border-color: var(--accent); }
+    .condition-btn:hover i, .condition-btn:hover svg { color: var(--accent); }
+    .condition-btn.selected { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-ink); font-weight: 700; box-shadow: 0 0 0 2px var(--accent-border); }
+    .condition-btn.selected i, .condition-btn.selected svg { color: var(--accent); }
+    .condition-btn.selected .cond-desc { color: var(--accent-ink); opacity: 0.9; }
+
+    input[name="furniture_type"], input[name="condition"] { display: none; }
+
+    .price-preview-card {
+      background: linear-gradient(135deg, var(--accent-bg) 0%, rgba(5, 150, 105, 0.08) 100%);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-4) var(--sp-5);
+      text-align: center;
+      margin-bottom: var(--sp-5);
+      display: none;
+    }
+    .price-preview-card .value { font-size: 24px; font-weight: 800; color: var(--accent-ink); }
+    .price-preview-card .label { font-size: 12px; color: var(--accent-ink); font-weight: 500; }
+
+    .photo-upload-area {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--sp-6) var(--sp-4);
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      background: var(--surface-2);
+    }
+    .photo-upload-area:hover { border-color: var(--accent); background: var(--accent-bg); }
+    .photo-upload-area .hint { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .photo-upload-area .hint i, .photo-upload-area .hint svg { width: 28px; height: 28px; color: var(--accent); }
     .photo-preview {
       width: 100%;
-      height: 140px;
+      height: 180px;
       object-fit: cover;
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-md);
       display: none;
-      margin-bottom: 10px;
+      margin-bottom: var(--sp-3);
+      border: 1px solid var(--border);
     }
     .photo-status { font-size: 12px; margin-top: 6px; display: none; }
     .photo-status.uploading { color: var(--muted); }
-    .photo-status.done { color: var(--ok-ink); }
-    .photo-status.failed { color: var(--danger); }
-
-    #success-msg strong { display: block; font-size: 16px; margin-bottom: 4px; }
+    .photo-status.done { color: var(--ok-ink); font-weight: 600; }
+    .photo-status.failed { color: var(--danger); font-weight: 600; }
   </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
-  <div class="page-wrap">
-    <div class="auth-card">
-      <div class="logo-standalone">THE DISPOSAL GUILT</div>
-      <h1>ประเมินของเก่าของคุณ</h1>
-      <p class="subtitle">กรอกข้อมูลเฟอร์นิเจอร์เพื่อรับราคาประเมิน</p>
+  <main class="main-content">
+    <div class="container-md">
+      <!-- Stepper Wizard -->
+      <div id="app-stepper"></div>
 
-      <form id="assessment-form">
-
-        <!-- ประเภทเฟอร์นิเจอร์ -->
-        <div class="field">
-          <label>ประเภทเฟอร์นิเจอร์</label>
-          <div class="type-grid" id="type-grid"></div>
-          <input type="text" name="furniture_type" id="furniture_type" required />
+      <div class="card card-static" style="padding: var(--sp-8);">
+        <div style="margin-bottom: var(--sp-6);">
+          <span class="badge badge-accent mb-sm"><i data-lucide="camera"></i> ขั้นตอนที่ 1</span>
+          <h2>ส่งข้อมูลประเมินเฟอร์นิเจอร์เก่า</h2>
+          <p class="subtitle" style="margin-bottom: 0;">เลือกประเภทและสภาพเพื่อรับราคาประเมินและคูปองส่วนลดซื้อของใหม่</p>
         </div>
 
-        <!-- สภาพ -->
-        <div class="field">
-          <label>สภาพสินค้า</label>
-          <div class="condition-grid" id="condition-grid"></div>
-          <input type="text" name="condition" id="condition" required />
-        </div>
-
-        <div class="price-preview" id="price-preview">
-          <div class="value" id="price-preview-value">-</div>
-          <div class="label">ราคาประเมินโดยประมาณ</div>
-        </div>
-
-        <!-- รูปประกอบ -->
-        <div class="field">
-          <label>รูปประกอบ (ไม่บังคับ)</label>
-          <img class="photo-preview" id="photo-preview" />
-          <div class="photo-upload-area" id="photo-upload-area">
-            <div class="hint">แตะเพื่อเลือกรูปถ่ายเฟอร์นิเจอร์</div>
+        <form id="assessment-form">
+          <!-- 1. ประเภทเฟอร์นิเจอร์ -->
+          <div class="field">
+            <label>1. เลือกประเภทเฟอร์นิเจอร์ <span style="color: var(--danger);">*</span></label>
+            <div class="type-grid" id="type-grid"></div>
+            <input type="text" name="furniture_type" id="furniture_type" required />
           </div>
-          <input type="file" id="photo-input" accept="image/*" style="display: none;" />
-          <div class="photo-status" id="photo-status"></div>
-        </div>
 
-        <!-- รายละเอียด -->
-        <div class="field">
-          <label for="description">รายละเอียดเพิ่มเติม (ไม่บังคับ)</label>
-          <textarea name="description" id="description"
-            placeholder="เช่น โซฟา 3 ที่นั่ง สีเทา ขาไม้ ใช้มา 5 ปี"></textarea>
-        </div>
+          <!-- 2. สภาพสินค้า -->
+          <div class="field">
+            <label>2. เลือกระดับสภาพสินค้า <span style="color: var(--danger);">*</span></label>
+            <div class="condition-grid" id="condition-grid"></div>
+            <input type="text" name="condition" id="condition" required />
+          </div>
 
-        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">ส่งข้อมูลประเมิน</button>
+          <!-- Price Preview -->
+          <div class="price-preview-card" id="price-preview">
+            <div class="label">ราคาประเมินและส่วนลดที่จะได้รับ:</div>
+            <div class="value" id="price-preview-value">-</div>
+            <div style="font-size: 12px; color: var(--ok); margin-top: 4px;">
+              <i data-lucide="leaf" style="width: 13px; height: 13px; vertical-align: middle;"></i> พร้อมร่วมเป็นส่วนหนึ่งในการลดก๊าซ CO₂
+            </div>
+          </div>
 
-        <div class="msg msg-error" id="error-msg"></div>
-        <div class="msg msg-success" id="success-msg"></div>
-      </form>
+          <!-- 3. รูปถ่าย -->
+          <div class="field">
+            <label>3. รูปถ่ายเฟอร์นิเจอร์ (ไม่บังคับ แต่ช่วยให้ช่างตรวจสอบได้ง่ายขึ้น)</label>
+            <img class="photo-preview" id="photo-preview" />
+            <div class="photo-upload-area" id="photo-upload-area">
+              <div class="hint">
+                <i data-lucide="upload-cloud"></i>
+                <span>คลิกหรือแตะเพื่อเลือกรูปภาพจากเครื่อง</span>
+                <span style="font-size: 11px; color: var(--muted-2);">รองรับ JPG, PNG (ขนาดไม่เกิน 10MB)</span>
+              </div>
+            </div>
+            <input type="file" id="photo-input" accept="image/*" style="display: none;" />
+            <div class="photo-status" id="photo-status"></div>
+          </div>
+
+          <!-- 4. รายละเอียดเพิ่มเติม -->
+          <div class="field">
+            <label for="description">4. รายละเอียดเพิ่มเติม (ไม่บังคับ)</label>
+            <textarea name="description" id="description"
+              placeholder="เช่น โซฟาผ้า 3 ที่นั่ง สีเทา ขาไม้ ไม่มีรอยขาด ใช้งานมาประมาณ 3 ปี"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="submit-btn">
+            <i data-lucide="check-circle"></i> ยืนยันการประเมินราคา
+          </button>
+
+          <div class="msg msg-error" id="error-msg"></div>
+          <div class="msg msg-success" id="success-msg"></div>
+        </form>
+      </div>
     </div>
-  </div>
+  </main>
 
-  <!-- โหลด api.js ก่อน (มีฟังก์ชัน createItem) แล้วค่อย auth.js (มี requireLogin) -->
+  <div id="app-footer"></div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/components.js"></script>
   <script>
-    // หน้านี้ต้องล็อกอินก่อนใช้งาน — ไม่มี token ให้เด้งไปหน้า login
     requireLogin()
     renderNav({ root: "../", active: "assess" })
+    renderStepper(1)
+    renderFooter({ root: "../", dir: "pages" })
 
     const FURNITURE_TYPES = [
-      ["sofa", "โซฟา", "🛋️"], ["table", "โต๊ะ", "🍽️"], ["chair", "เก้าอี้", "🪑"], ["bed", "เตียง", "🛏️"],
-      ["wardrobe", "ตู้เสื้อผ้า", "🚪"], ["shelf", "ชั้นวางของ", "📚"], ["other", "อื่นๆ", "📦"],
+      ["sofa", "โซฟา", "sofa"],
+      ["table", "โต๊ะ", "utensils-crossed"],
+      ["chair", "เก้าอี้", "armchair"],
+      ["bed", "เตียง", "bed-double"],
+      ["wardrobe", "ตู้เสื้อผ้า", "door-open"],
+      ["shelf", "ชั้นวางของ", "book-open"],
+      ["other", "อื่นๆ", "box"],
     ]
     const CONDITIONS = [
-      ["good", "ดี", "😊", "ใช้งานได้ปกติ ไม่มีตำหนิเด่นชัด"],
-      ["fair", "พอใช้", "😐", "มีร่องรอยการใช้งานบ้าง แต่ยังใช้งานได้ดี"],
-      ["poor", "ทรุดโทรม", "😔", "มีตำหนิชัดเจน หรือใช้งานมานาน"],
+      ["good", "สภาพดี", "smile", "ใช้งานได้ปกติ ไม่มีตำหนิเด่นชัด"],
+      ["fair", "สภาพพอใช้", "meh", "มีร่องรอยการใช้งานบ้าง ยังแข็งแรง"],
+      ["poor", "สภาพทรุดโทรม", "frown", "มีตำหนิชัดเจน เหมาะแก่นำไปรีไซเคิล"],
     ]
 
-    // สูตรเดียวกับฝั่ง backend (items.py) — ใช้แค่พรีวิวราคาให้ผู้ใช้เห็นก่อนส่งจริง
     const BASE_PRICE = { sofa: 3000, bed: 2500, wardrobe: 2000, table: 1500, chair: 800, shelf: 1000, other: 500 }
     const CONDITION_MULT = { good: 0.5, fair: 0.3, poor: 0.1 }
 
@@ -197,11 +230,16 @@
       }
       pricePreviewValue.textContent = `${Math.round(base * mult).toLocaleString()} บาท`
       pricePreview.style.display = "block"
+      if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
     }
 
-    typeGrid.innerHTML = FURNITURE_TYPES.map(([value, label, emoji]) => `
-      <div class="type-btn" data-value="${value}"><span class="emoji">${emoji}</span>${label}</div>
+    typeGrid.innerHTML = FURNITURE_TYPES.map(([value, label, icon]) => `
+      <div class="type-btn" data-value="${value}">
+        <i data-lucide="${icon}"></i>
+        <span>${label}</span>
+      </div>
     `).join("")
+
     typeGrid.querySelectorAll(".type-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         typeGrid.querySelectorAll(".type-btn").forEach((b) => b.classList.remove("selected"))
@@ -211,9 +249,14 @@
       })
     })
 
-    conditionGrid.innerHTML = CONDITIONS.map(([value, label, emoji, desc]) => `
-      <div class="condition-btn" data-value="${value}"><span class="emoji">${emoji}</span>${label}<span class="cond-desc">${desc}</span></div>
+    conditionGrid.innerHTML = CONDITIONS.map(([value, label, icon, desc]) => `
+      <div class="condition-btn" data-value="${value}">
+        <i data-lucide="${icon}"></i>
+        <span>${label}</span>
+        <span class="cond-desc">${desc}</span>
+      </div>
     `).join("")
+
     conditionGrid.querySelectorAll(".condition-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         conditionGrid.querySelectorAll(".condition-btn").forEach((b) => b.classList.remove("selected"))
@@ -223,14 +266,15 @@
       })
     })
 
-    // อัปโหลดรูปทันทีตอนเลือกไฟล์ (preview ก่อนอัปโหลดเสร็จด้วย object URL)
+    // Upload photo
     let uploadedPhotoUrl = null
     let photoUploading = false
+    const photoUploadArea = document.getElementById("photo-upload-area")
     const photoInput = document.getElementById("photo-input")
     const photoPreview = document.getElementById("photo-preview")
     const photoStatus = document.getElementById("photo-status")
 
-    document.getElementById("photo-upload-area").addEventListener("click", () => photoInput.click())
+    photoUploadArea.addEventListener("click", () => photoInput.click())
 
     photoInput.addEventListener("change", async () => {
       const file = photoInput.files[0]
@@ -238,60 +282,58 @@
 
       photoPreview.src = URL.createObjectURL(file)
       photoPreview.style.display = "block"
+      photoUploadArea.style.display = "none"
 
-      uploadedPhotoUrl = null
       photoUploading = true
-      photoStatus.textContent = "กำลังอัปโหลดรูป..."
       photoStatus.className = "photo-status uploading"
+      photoStatus.textContent = "กำลังอัปโหลดรูปภาพ..."
       photoStatus.style.display = "block"
 
       try {
-        const result = await uploadImage(file)
-        uploadedPhotoUrl = result.url
-        photoStatus.textContent = "อัปโหลดรูปสำเร็จ"
+        const res = await uploadImage(file)
+        uploadedPhotoUrl = res.url
         photoStatus.className = "photo-status done"
+        photoStatus.textContent = "✓ อัปโหลดรูปสำเร็จ"
       } catch (err) {
-        photoStatus.textContent = `อัปโหลดรูปไม่สำเร็จ: ${err.message}`
         photoStatus.className = "photo-status failed"
+        photoStatus.textContent = `อัปโหลดไม่สำเร็จ: ${err.message}`
+        uploadedPhotoUrl = null
       } finally {
         photoUploading = false
       }
     })
 
-    const form = document.getElementById('assessment-form')
-    const submitBtn = document.getElementById('submit-btn')
-    const errorMsg = document.getElementById('error-msg')
-    const successMsg = document.getElementById('success-msg')
+    // Form submit
+    const form = document.getElementById("assessment-form")
+    const submitBtn = document.getElementById("submit-btn")
+    const errorMsg = document.getElementById("error-msg")
+    const successMsg = document.getElementById("success-msg")
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault()
-
-      // ซ่อน error เก่า
-      errorMsg.style.display = 'none'
-      successMsg.style.display = 'none'
+      errorMsg.style.display = "none"
+      successMsg.style.display = "none"
 
       if (!typeInput.value) {
-        errorMsg.textContent = 'กรุณาเลือกประเภทเฟอร์นิเจอร์ก่อน'
-        errorMsg.style.display = 'block'
+        errorMsg.textContent = "กรุณาเลือกประเภทเฟอร์นิเจอร์"
+        errorMsg.style.display = "flex"
         return
       }
       if (!conditionInput.value) {
-        errorMsg.textContent = 'กรุณาเลือกสภาพสินค้าก่อน'
-        errorMsg.style.display = 'block'
+        errorMsg.textContent = "กรุณาเลือกระดับสภาพสินค้า"
+        errorMsg.style.display = "flex"
         return
       }
       if (photoUploading) {
-        errorMsg.textContent = 'กรุณารอให้อัปโหลดรูปเสร็จก่อน'
-        errorMsg.style.display = 'block'
+        errorMsg.textContent = "กรุณารอรูปภาพอัปโหลดเสร็จสิ้นก่อน"
+        errorMsg.style.display = "flex"
         return
       }
 
-      // เปลี่ยนปุ่มเป็น loading
       submitBtn.disabled = true
-      submitBtn.textContent = 'กำลังส่ง...'
+      submitBtn.innerHTML = "กำลังประมวลผล..."
 
       try {
-        // เรียก POST /api/items ผ่าน api.js
         const item = await createItem({
           furniture_type: typeInput.value,
           condition: conditionInput.value,
@@ -299,26 +341,26 @@
           photo_url: uploadedPhotoUrl,
         })
 
-        // สำเร็จ — แสดงราคาประเมินและไปหน้าผลประเมิน
         successMsg.innerHTML = `
-          <strong>ส่งข้อมูลสำเร็จ! 🎉</strong>
-          ราคาประเมิน: <code>${item.estimated_price.toLocaleString()} บาท</code><br>
-          <small>กำลังพาไปดูผลประเมิน...</small>
+          <strong><i data-lucide="check-circle"></i> ส่งข้อมูลสำเร็จ!</strong>
+          ราคาประเมิน: <strong>${item.estimated_price.toLocaleString()} บาท</strong> (กำลังพาไปดูผล...)
         `
-        successMsg.style.display = 'block'
+        successMsg.style.display = "flex"
+        if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
 
         setTimeout(() => {
           location.href = `assessment-result.html?id=${item.id}`
-        }, 1200)
-
+        }, 1000)
       } catch (err) {
-        // แสดง error บนหน้า
         errorMsg.textContent = `ส่งข้อมูลไม่สำเร็จ: ${err.message}`
-        errorMsg.style.display = 'block'
+        errorMsg.style.display = "flex"
         submitBtn.disabled = false
-        submitBtn.textContent = 'ส่งข้อมูลประเมิน'
+        submitBtn.innerHTML = '<i data-lucide="check-circle"></i> ยืนยันการประเมินราคา'
+        if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
       }
     })
+
+    initPage()
   </script>
 </body>
 </html>

@@ -6,86 +6,109 @@
   <title>จัดการรอบเวลา — Admin</title>
   <link rel="stylesheet" href="../css/main.css" />
   <style>
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-    .form-grid .field { margin-bottom: 0; }
-
-    .checkbox-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; }
-    .checkbox-row label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 400; color: var(--ink); }
+    .checkbox-row { display: flex; gap: var(--sp-4); flex-wrap: wrap; margin-top: 6px; }
+    .checkbox-row label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--ink); cursor: pointer; }
     .checkbox-row input { width: auto; accent-color: var(--accent); }
-
-    .day-badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--bg); color: var(--muted); margin-left: 6px; }
+    .slot-tech-cell input { padding: 4px 8px; font-size: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
   </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
-  <div class="container container-lg">
-    <h1>จัดการรอบเวลา</h1>
-    <p class="subtitle">สร้างรอบนัดหมายให้ช่างและจัดการรอบที่มีอยู่</p>
+  <main class="main-content">
+    <div class="container-xl">
+      <div class="page-header">
+        <div class="page-header-main">
+          <h1><i data-lucide="clock" style="vertical-align: middle; color: var(--accent); margin-right: 8px;"></i>จัดการรอบเวลานัดหมาย & ทีมช่าง</h1>
+          <p class="subtitle" style="margin-bottom: 0;">สร้างรอบเวลาเดี่ยว สร้างแบบหลายวันพร้อมกัน และจัดการสถานะความว่าง</p>
+        </div>
+      </div>
 
-    <div class="card">
-      <h2>สร้างรอบเวลาเดี่ยว</h2>
-      <form id="single-form">
-        <div class="form-grid">
-          <div class="field">
-            <label for="s-datetime">วันที่-เวลา</label>
-            <input type="datetime-local" id="s-datetime" required />
+      <!-- Creation Grids (2 Columns) -->
+      <div class="grid-cols-2" style="margin-bottom: var(--sp-8);">
+        <!-- 1. Single Create -->
+        <div class="card card-static" style="border-left-color: var(--accent);">
+          <h2 style="font-size: 15px; margin-bottom: var(--sp-4);"><i data-lucide="plus-circle"></i> สร้างรอบเวลาเดี่ยว</h2>
+          <form id="single-form">
+            <div class="field">
+              <label for="s-datetime">วันและเวลานัดหมาย</label>
+              <input type="datetime-local" id="s-datetime" required />
+            </div>
+            <div class="field">
+              <label for="s-technician">ชื่อทีมช่างผู้รับผิดชอบ</label>
+              <input type="text" id="s-technician" placeholder="เช่น ทีมช่าง A" required />
+            </div>
+            <div class="msg msg-error" id="single-error"></div>
+            <button type="submit" class="btn btn-primary" style="margin-top: var(--sp-3);">
+              <i data-lucide="plus"></i> สร้างรอบเวลา
+            </button>
+          </form>
+        </div>
+
+        <!-- 2. Bulk Create -->
+        <div class="card card-static" style="border-left-color: var(--ok);">
+          <h2 style="font-size: 15px; margin-bottom: var(--sp-4);"><i data-lucide="calendar-plus"></i> สร้างหลายรอบพร้อมกัน (Bulk)</h2>
+          <div class="grid-cols-2" style="gap: var(--sp-3);">
+            <div class="field" style="margin-bottom: var(--sp-3);">
+              <label for="b-start">วันที่เริ่มต้น</label>
+              <input type="date" id="b-start" required />
+            </div>
+            <div class="field" style="margin-bottom: var(--sp-3);">
+              <label for="b-end">วันที่สิ้นสุด</label>
+              <input type="date" id="b-end" required />
+            </div>
           </div>
-          <div class="field">
-            <label for="s-technician">ชื่อช่าง</label>
-            <input type="text" id="s-technician" placeholder="เช่น ทีมช่าง A" required />
+          <div class="field" style="margin-bottom: var(--sp-3);">
+            <label>เลือกรอบชั่วโมง</label>
+            <div class="checkbox-row" id="bulk-hours">
+              <label><input type="checkbox" value="9" checked /> 09:00</label>
+              <label><input type="checkbox" value="13" checked /> 13:00</label>
+              <label><input type="checkbox" value="15" checked /> 15:00</label>
+            </div>
           </div>
-        </div>
-        <div class="msg msg-error" id="single-error"></div>
-        <button type="submit" class="btn btn-primary" style="margin-top:16px;">สร้างรอบเวลา</button>
-      </form>
-    </div>
-
-    <div class="card">
-      <h2>สร้างหลายรอบพร้อมกัน</h2>
-      <div class="form-grid">
-        <div class="field">
-          <label for="b-start">วันที่เริ่ม</label>
-          <input type="date" id="b-start" required />
-        </div>
-        <div class="field">
-          <label for="b-end">วันที่สิ้นสุด</label>
-          <input type="date" id="b-end" required />
+          <div class="field" style="margin-bottom: var(--sp-3);">
+            <label for="b-technicians">รายชื่อทีมช่าง (คั่นด้วยจุลภาค ,)</label>
+            <input type="text" id="b-technicians" value="ทีมช่าง A, ทีมช่าง B, ทีมช่าง C" />
+          </div>
+          <div class="msg msg-error" id="bulk-error"></div>
+          <button type="button" class="btn btn-ok" id="bulk-submit-btn">
+            <i data-lucide="calendar-plus"></i> สร้างรอบเวลาพร้อมกัน
+          </button>
         </div>
       </div>
 
-      <div class="field" style="margin-top:14px;">
-        <label>ช่วงเวลา</label>
-        <div class="checkbox-row" id="bulk-hours">
-          <label><input type="checkbox" value="9" checked /> 09:00</label>
-          <label><input type="checkbox" value="13" checked /> 13:00</label>
-          <label><input type="checkbox" value="15" checked /> 15:00</label>
-        </div>
+      <!-- Timeslots List -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-3);">
+        <h2 style="font-size: 16px; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="list"></i> รอบเวลานัดหมายทั้งหมดในระบบ
+        </h2>
+        <span class="badge badge-accent" id="slot-count-badge">- รายการ</span>
       </div>
 
-      <div class="field" style="margin-top:14px;">
-        <label for="b-technicians">รายชื่อช่าง (คั่นด้วยจุลภาค — สลับกันตามรอบ)</label>
-        <input type="text" id="b-technicians" value="ทีมช่าง A, ทีมช่าง B, ทีมช่าง C" />
+      <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูลรอบเวลา...</div>
+      <div class="msg msg-error" id="error-msg"></div>
+
+      <div class="table-wrap" id="table-wrap" style="display: none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>วันและเวลานัด</th>
+              <th>ทีมช่างผู้รับผิดชอบ</th>
+              <th>สถานะความว่าง</th>
+              <th>สลับสถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="timeslots-body"></tbody>
+        </table>
       </div>
-
-      <div class="msg msg-error" id="bulk-error"></div>
-      <div class="msg msg-success" id="bulk-success"></div>
-      <button type="button" class="btn btn-primary" id="bulk-submit-btn" style="margin-top:16px;">สร้างรอบเวลาหลายวัน</button>
     </div>
+  </main>
 
-    <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
-    <div class="msg msg-error" id="error-msg"></div>
+  <div id="app-footer"></div>
 
-    <div class="table-wrap" id="table-wrap" style="display: none;">
-      <table class="data-table">
-        <thead>
-          <tr><th>#</th><th>วันเวลา</th><th>ช่าง</th><th>สถานะ</th><th>จัดการ</th></tr>
-        </thead>
-        <tbody id="timeslots-body"></tbody>
-      </table>
-    </div>
-  </div>
-
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/components.js"></script>
@@ -93,153 +116,202 @@
     ;(async () => {
       await requireRole("admin")
       renderNav({ root: "../", dir: "admin", active: "a-timeslots" })
-      load()
+      renderFooter({ root: "../", dir: "admin" })
+      await loadSlots()
+      initPage()
     })()
 
+    const tbody = document.getElementById("timeslots-body")
+    const tableWrap = document.getElementById("table-wrap")
     const loadingMsg = document.getElementById("loading-msg")
     const errorMsg = document.getElementById("error-msg")
-    const tableWrap = document.getElementById("table-wrap")
-    const tbody = document.getElementById("timeslots-body")
+    const countBadge = document.getElementById("slot-count-badge")
 
-    function formatDateTime(dt) {
-      return new Date(dt).toLocaleString("th-TH", { weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    let allSlots = []
+
+    function renderTable() {
+      countBadge.textContent = `${allSlots.length} รายการ`
+      if (allSlots.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:24px;">ยังไม่มีรอบเวลาในระบบ</td></tr>'
+        return
+      }
+
+      tbody.innerHTML = allSlots.map((s) => {
+        const d = new Date(s.datetime)
+        const dateStr = d.toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", year: "2-digit" })
+        const timeStr = d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) + " น."
+
+        return `
+          <tr data-id="${s.id}">
+            <td><strong>#${s.id}</strong></td>
+            <td><strong>${dateStr}</strong> เวลา ${timeStr}</td>
+            <td class="slot-tech-cell">
+              <input type="text" class="tech-input" value="${s.technician_name}" style="padding: 4px 8px; width: 140px;" />
+              <button class="btn btn-outline btn-sm save-tech-btn" style="padding: 3px 8px; margin-left: 4px;"><i data-lucide="check"></i></button>
+            </td>
+            <td>
+              <span class="badge ${s.is_available ? "badge-ok" : "badge-muted"}">
+                ${s.is_available ? "ว่าง (จองได้)" : "ถูกจอง / ปิดรับ"}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-outline btn-sm toggle-btn">
+                ${s.is_available ? "เปลี่ยนเป็นไม่ว่าง" : "เปลี่ยนเป็นว่าง"}
+              </button>
+            </td>
+            <td>
+              <button class="btn btn-danger btn-sm delete-btn"><i data-lucide="trash-2"></i> ลบ</button>
+            </td>
+          </tr>
+        `
+      }).join("")
+
+      tbody.querySelectorAll("tr").forEach((tr) => {
+        const id = Number(tr.dataset.id)
+        const s = allSlots.find((item) => item.id === id)
+
+        tr.querySelector(".save-tech-btn").addEventListener("click", async () => {
+          const tech = tr.querySelector(".tech-input").value.trim()
+          if (!tech) return toast("กรุณาระบุชื่อทีมช่าง", "error")
+          try {
+            await updateTimeslot(id, { technician_name: tech })
+            toast(`อัปเดตทีมช่างของรอบ #${id} สำเร็จ`, "success")
+            s.technician_name = tech
+            renderTable()
+          } catch (err) {
+            toast(`อัปเดตไม่สำเร็จ: ${err.message}`, "error")
+          }
+        })
+
+        tr.querySelector(".toggle-btn").addEventListener("click", async () => {
+          const newAvail = !s.is_available
+          try {
+            await updateTimeslot(id, { is_available: newAvail })
+            toast(`เปลี่ยนสถานะรอบ #${id} เรียบร้อย`, "success")
+            s.is_available = newAvail
+            renderTable()
+          } catch (err) {
+            toast(`เปลี่ยนสถานะไม่สำเร็จ: ${err.message}`, "error")
+          }
+        })
+
+        tr.querySelector(".delete-btn").addEventListener("click", async () => {
+          const ok = await confirmDialog(`ต้องการลบรอบเวลา #${id} หรือไม่?`, { confirmLabel: "ลบ" })
+          if (!ok) return
+          try {
+            await deleteTimeslot(id)
+            toast("ลบรอบเวลาสำเร็จ", "success")
+            allSlots = allSlots.filter((item) => item.id !== id)
+            renderTable()
+          } catch (err) {
+            toast(`ลบไม่สำเร็จ: ${err.message}`, "error")
+          }
+        })
+      })
+
+      if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
     }
 
-    // ---------- สร้างรอบเดี่ยว ----------
-    const singleForm = document.getElementById("single-form")
-    const singleError = document.getElementById("single-error")
-
-    singleForm.addEventListener("submit", async (e) => {
+    document.getElementById("single-form").addEventListener("submit", async (e) => {
       e.preventDefault()
-      singleError.style.display = "none"
-      const datetimeValue = document.getElementById("s-datetime").value
-      const technician = document.getElementById("s-technician").value.trim()
+      const errorEl = document.getElementById("single-error")
+      errorEl.style.display = "none"
+
+      const dt = document.getElementById("s-datetime").value
+      const tech = document.getElementById("s-technician").value.trim()
+      if (!dt || !tech) return
+
       try {
-        await createTimeslot({ datetime: new Date(datetimeValue).toISOString(), technician_name: technician })
+        const created = await createTimeslot({
+          datetime: new Date(dt).toISOString(),
+          technician_name: tech,
+        })
         toast("สร้างรอบเวลาสำเร็จ", "success")
-        singleForm.reset()
-        await load()
+        allSlots.unshift(created)
+        allSlots.sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
+        renderTable()
+        e.target.reset()
       } catch (err) {
-        singleError.textContent = `สร้างไม่สำเร็จ: ${err.message}`
-        singleError.style.display = "block"
+        errorEl.textContent = err.message
+        errorEl.style.display = "flex"
       }
     })
 
-    // ---------- สร้างหลายรอบพร้อมกัน ----------
-    const bulkError = document.getElementById("bulk-error")
-    const bulkSuccess = document.getElementById("bulk-success")
-    const bulkSubmitBtn = document.getElementById("bulk-submit-btn")
-
-    bulkSubmitBtn.addEventListener("click", async () => {
-      bulkError.style.display = "none"
-      bulkSuccess.style.display = "none"
+    document.getElementById("bulk-submit-btn").addEventListener("click", async () => {
+      const errorEl = document.getElementById("bulk-error")
+      errorEl.style.display = "none"
 
       const startStr = document.getElementById("b-start").value
       const endStr = document.getElementById("b-end").value
-      const hours = Array.from(document.querySelectorAll("#bulk-hours input:checked")).map((el) => Number(el.value))
-      const technicians = document.getElementById("b-technicians").value.split(",").map((t) => t.trim()).filter(Boolean)
+      const techInput = document.getElementById("b-technicians").value.trim()
 
       if (!startStr || !endStr) {
-        bulkError.textContent = "กรุณาระบุวันที่เริ่มและสิ้นสุด"
-        bulkError.style.display = "block"
+        errorEl.textContent = "กรุณาระบุวันที่เริ่มต้นและสิ้นสุด"
+        errorEl.style.display = "flex"
         return
       }
+
+      const hours = Array.from(document.querySelectorAll("#bulk-hours input:checked")).map((i) => Number(i.value))
       if (hours.length === 0) {
-        bulkError.textContent = "กรุณาเลือกช่วงเวลาอย่างน้อย 1 ช่วง"
-        bulkError.style.display = "block"
-        return
-      }
-      if (technicians.length === 0) {
-        bulkError.textContent = "กรุณาระบุชื่อช่างอย่างน้อย 1 คน"
-        bulkError.style.display = "block"
+        errorEl.textContent = "กรุณาเลือกช่วงเวลาอย่างน้อย 1 ช่วง"
+        errorEl.style.display = "flex"
         return
       }
 
-      const start = new Date(startStr + "T00:00:00")
-      const end = new Date(endStr + "T00:00:00")
-      if (end < start) {
-        bulkError.textContent = "วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม"
-        bulkError.style.display = "block"
-        return
-      }
+      const technicians = techInput ? techInput.split(",").map((s) => s.trim()).filter(Boolean) : ["ทีมช่าง"]
+      const btn = document.getElementById("bulk-submit-btn")
+      btn.disabled = true
+      btn.textContent = "กำลังสร้าง..."
 
-      const slotsToCreate = []
-      let technicianIdx = 0
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        for (const hour of hours.sort((a, b) => a - b)) {
-          const dt = new Date(d)
-          dt.setHours(hour, 0, 0, 0)
-          slotsToCreate.push({
-            datetime: dt.toISOString(),
-            technician_name: technicians[technicianIdx % technicians.length],
-          })
-          technicianIdx++
-        }
-      }
+      const start = new Date(startStr)
+      const end = new Date(endStr)
+      let count = 0
+      let techIdx = 0
 
-      bulkSubmitBtn.disabled = true
-      bulkSubmitBtn.textContent = `กำลังสร้าง ${slotsToCreate.length} รอบ...`
       try {
-        await Promise.all(slotsToCreate.map((s) => createTimeslot(s)))
-        bulkSuccess.textContent = `สร้างรอบเวลาสำเร็จ ${slotsToCreate.length} รอบ`
-        bulkSuccess.style.display = "block"
-        toast(`สร้างรอบเวลาสำเร็จ ${slotsToCreate.length} รอบ`, "success")
-        await load()
+        const cur = new Date(start)
+        while (cur <= end) {
+          for (const h of hours) {
+            const dt = new Date(cur)
+            dt.setHours(h, 0, 0, 0)
+            const tech = technicians[techIdx % technicians.length]
+            techIdx++
+
+            const created = await createTimeslot({
+              datetime: dt.toISOString(),
+              technician_name: tech,
+            })
+            allSlots.push(created)
+            count++
+          }
+          cur.setDate(cur.getDate() + 1)
+        }
+
+        toast(`สร้างรอบเวลาสำเร็จทั้งหมด ${count} รอบ`, "success")
+        allSlots.sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
+        renderTable()
       } catch (err) {
-        bulkError.textContent = `สร้างบางรอบไม่สำเร็จ: ${err.message}`
-        bulkError.style.display = "block"
-        await load()
+        errorEl.textContent = `สร้างไม่สำเร็จทั้งหมด (สร้างไปแล้ว ${count} รอบ): ${err.message}`
+        errorEl.style.display = "flex"
+        renderTable()
       } finally {
-        bulkSubmitBtn.disabled = false
-        bulkSubmitBtn.textContent = "สร้างรอบเวลาหลายวัน"
+        btn.disabled = false
+        btn.innerHTML = '<i data-lucide="calendar-plus"></i> สร้างรอบเวลาพร้อมกัน'
+        if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
       }
     })
 
-    // ---------- ตารางรอบเวลาทั้งหมด ----------
-    async function load() {
+    async function loadSlots() {
       try {
-        const slots = await getAllTimeslots()
-        slots.sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
+        allSlots = await getAllTimeslots()
+        allSlots.sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
         loadingMsg.style.display = "none"
         tableWrap.style.display = "block"
-
-        const now = new Date()
-        tbody.innerHTML = slots.map((s) => {
-          const isPast = new Date(s.datetime) < now
-          const statusBadge = !s.is_available
-            ? `<span class="badge badge-accent">จองแล้ว</span>`
-            : isPast
-              ? `<span class="badge badge-muted">หมดเวลา</span>`
-              : `<span class="badge badge-ok">ว่าง</span>`
-          return `
-            <tr>
-              <td>#${s.id}</td>
-              <td>${formatDateTime(s.datetime)}${isPast ? '<span class="day-badge">ผ่านมาแล้ว</span>' : ""}</td>
-              <td>${s.technician_name}</td>
-              <td>${statusBadge}</td>
-              <td><button class="btn btn-danger delete-slot-btn" data-id="${s.id}" style="padding:6px 12px; font-size:12px;">ลบ</button></td>
-            </tr>
-          `
-        }).join("") || `<tr><td colspan="5" style="text-align:center; color:var(--muted-2);">ยังไม่มีรอบเวลา</td></tr>`
-
-        tbody.querySelectorAll(".delete-slot-btn").forEach((btn) => {
-          btn.addEventListener("click", async () => {
-            const id = Number(btn.dataset.id)
-            const ok = await confirmDialog("ต้องการลบรอบเวลานี้ใช่หรือไม่?", { confirmLabel: "ลบ" })
-            if (!ok) return
-            try {
-              await deleteTimeslot(id)
-              toast("ลบรอบเวลาสำเร็จ", "success")
-              await load()
-            } catch (err) {
-              toast(`ลบไม่สำเร็จ: ${err.message}`, "error")
-            }
-          })
-        })
+        renderTable()
       } catch (err) {
         loadingMsg.style.display = "none"
-        errorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
-        errorMsg.style.display = "block"
+        errorMsg.textContent = `โหลดรอบเวลาไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = "flex"
       }
     }
   </script>

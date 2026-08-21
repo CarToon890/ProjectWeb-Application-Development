@@ -5,50 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>จัดการการจอง — Admin</title>
   <link rel="stylesheet" href="../css/main.css" />
-  <style>
-    .status-filter { margin-bottom: 18px; display: flex; gap: 8px; flex-wrap: wrap; }
-    .status-filter button {
-      padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 20px;
-      background: var(--surface); font-size: 12px; cursor: pointer; font-family: inherit;
-    }
-    .status-filter button.active { border-color: var(--ink); background: var(--ink); color: #fff; }
-
-    .warning-banner {
-      background: var(--accent-bg);
-      border: 1px solid var(--accent-border);
-      border-radius: var(--radius-sm);
-      padding: 12px 16px;
-      font-size: 13px;
-      color: var(--accent-ink);
-      margin-bottom: 18px;
-    }
-  </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
-  <div class="container container-lg">
-    <h1>จัดการการจอง</h1>
-    <p class="subtitle">การจองทั้งหมดในระบบ</p>
+  <main class="main-content">
+    <div class="container-xl">
+      <div class="page-header">
+        <div class="page-header-main">
+          <h1><i data-lucide="calendar-check" style="vertical-align: middle; color: var(--accent); margin-right: 8px;"></i>จัดการรายการจองทั้งหมด</h1>
+          <p class="subtitle" style="margin-bottom: 0;">ตรวจสอบรายละเอียด มอบหมายงาน และอัปเดตสถานะคำสั่งจองของลูกค้า</p>
+        </div>
+      </div>
 
-    <div class="warning-banner">
-      ⚠️ เปลี่ยนสถานะเป็น <strong>กำลังขนส่ง</strong> จะดันสถานะของเก่าเป็น "รับของแล้ว" และ <strong>เสร็จสิ้น</strong> จะดันเป็น "ส่งต่อสำเร็จ" โดยอัตโนมัติ
+      <div class="warning-banner">
+        <i data-lucide="alert-triangle"></i>
+        <span>การเปลี่ยนสถานะเป็น <strong>กำลังขนส่ง</strong> จะดันสถานะของเก่าเป็น "รับของแล้ว" และเมื่อเป็น <strong>เสร็จสิ้น</strong> จะบันทึกเป็น "ส่งต่อสำเร็จ" พร้อมบันทึกสถิติ CO₂ โดยอัตโนมัติ</span>
+      </div>
+
+      <div class="status-filter" id="status-filter"></div>
+      <div class="msg msg-error" id="error-msg"></div>
+
+      <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูลการจองทั้งหมด...</div>
+
+      <div class="table-wrap" id="table-wrap" style="display: none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>ลูกค้า</th>
+              <th>ของเก่าที่รับ</th>
+              <th>ของใหม่ที่ส่ง</th>
+              <th>ยอดรวมสุทธิ</th>
+              <th>สถานะปัจจุบัน</th>
+              <th>ปรับเปลี่ยนสถานะ</th>
+            </tr>
+          </thead>
+          <tbody id="bookings-body"></tbody>
+        </table>
+      </div>
     </div>
+  </main>
 
-    <div class="status-filter" id="status-filter"></div>
-    <div class="msg msg-error" id="error-msg"></div>
+  <div id="app-footer"></div>
 
-    <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
-    <div class="table-wrap" id="table-wrap" style="display: none;">
-      <table class="data-table">
-        <thead>
-          <tr><th>#</th><th>ลูกค้า</th><th>ของเก่า</th><th>ของใหม่</th><th>ยอดรวม</th><th>สถานะ</th><th>เปลี่ยนสถานะ</th></tr>
-        </thead>
-        <tbody id="bookings-body"></tbody>
-      </table>
-    </div>
-  </div>
-
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/components.js"></script>
@@ -56,7 +57,10 @@
     ;(async () => {
       await requireRole("admin")
       renderNav({ root: "../", dir: "admin", active: "a-bookings" })
-      load()
+      renderFooter({ root: "../", dir: "admin" })
+      renderStatusFilter()
+      await load()
+      initPage()
     })()
 
     const STATUSES = ["pending", "confirmed", "in_transit", "completed", "cancelled"]
@@ -65,7 +69,7 @@
       completed: "เสร็จสิ้น", cancelled: "ยกเลิกแล้ว",
     }
     const STATUS_BADGE_CLASS = {
-      pending: "badge-muted", confirmed: "badge-accent", in_transit: "badge-accent",
+      pending: "badge-warning", confirmed: "badge-accent", in_transit: "badge-accent",
       completed: "badge-ok", cancelled: "badge-danger",
     }
     const STATUS_FILTERS = [["", "ทั้งหมด"], ...STATUSES.map((s) => [s, STATUS_LABEL[s]])]
@@ -74,49 +78,17 @@
       wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ", other: "อื่นๆ",
     }
 
+    const tbody = document.getElementById("bookings-body")
+    const tableWrap = document.getElementById("table-wrap")
     const loadingMsg = document.getElementById("loading-msg")
     const errorMsg = document.getElementById("error-msg")
-    const tableWrap = document.getElementById("table-wrap")
-    const tbody = document.getElementById("bookings-body")
     const statusFilter = document.getElementById("status-filter")
 
     let allBookings = []
+    let allItems = {}
+    let allProducts = {}
+    let allUsers = {}
     let activeStatus = ""
-
-    function renderRows() {
-      const rows = activeStatus ? allBookings.filter((b) => b.status === activeStatus) : allBookings
-      tbody.innerHTML = rows.map((b) => `
-        <tr>
-          <td>#${b.id}</td>
-          <td>${b.user.full_name}</td>
-          <td>${FURNITURE_LABEL[b.item.furniture_type] || b.item.furniture_type}</td>
-          <td>${b.product ? b.product.name : "-"}</td>
-          <td>${b.total_price.toLocaleString()} บาท</td>
-          <td><span class="badge ${STATUS_BADGE_CLASS[b.status] || "badge-muted"}">${STATUS_LABEL[b.status] || b.status}</span></td>
-          <td>
-            <select class="inline-select" data-id="${b.id}">
-              ${STATUSES.map((s) => `<option value="${s}" ${s === b.status ? "selected" : ""}>${STATUS_LABEL[s]}</option>`).join("")}
-            </select>
-          </td>
-        </tr>
-      `).join("") || `<tr><td colspan="7" style="text-align:center; color:var(--muted-2);">ไม่มีการจองในหมวดนี้</td></tr>`
-
-      tbody.querySelectorAll("select.inline-select").forEach((select) => {
-        select.addEventListener("change", async () => {
-          const id = Number(select.dataset.id)
-          const newStatus = select.value
-          select.disabled = true
-          try {
-            await updateBookingStatus(id, newStatus)
-            toast("อัปเดตสถานะสำเร็จ", "success")
-            await load()
-          } catch (err) {
-            toast(`อัปเดตไม่สำเร็จ: ${err.message}`, "error")
-            select.disabled = false
-          }
-        })
-      })
-    }
 
     function renderStatusFilter() {
       statusFilter.innerHTML = ""
@@ -134,24 +106,91 @@
       })
     }
 
+    function renderRows() {
+      const filtered = activeStatus ? allBookings.filter((b) => b.status === activeStatus) : allBookings
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">ไม่พบรายการจองตามเงื่อนไขที่เลือก</td></tr>'
+        return
+      }
+
+      tbody.innerHTML = filtered.map((b) => {
+        const item = allItems[b.item_id]
+        const product = b.product_id ? allProducts[b.product_id] : null
+        const user = allUsers[b.user_id]
+
+        const itemText = item ? `${FURNITURE_LABEL[item.furniture_type] || item.furniture_type} (${item.condition})` : `#${b.item_id}`
+        const productText = product ? product.name : "–"
+        const userText = user ? `${user.full_name} (@${user.username})` : `ผู้ใช้ #${b.user_id}`
+        const badgeCls = STATUS_BADGE_CLASS[b.status] || "badge-muted"
+        const currentLabel = STATUS_LABEL[b.status] || b.status
+
+        const options = STATUSES.map((s) =>
+          `<option value="${s}" ${s === b.status ? "selected" : ""}>${STATUS_LABEL[s]}</option>`
+        ).join("")
+
+        return `
+          <tr data-id="${b.id}">
+            <td><strong>#${b.id}</strong></td>
+            <td>${userText}</td>
+            <td>${itemText}</td>
+            <td>${productText}</td>
+            <td><strong>฿${b.total_price.toLocaleString()} บาท</strong></td>
+            <td><span class="badge ${badgeCls}">${currentLabel}</span></td>
+            <td>
+              <select class="inline-select status-select" data-id="${b.id}">
+                ${options}
+              </select>
+            </td>
+          </tr>
+        `
+      }).join("")
+
+      tbody.querySelectorAll(".status-select").forEach((sel) => {
+        sel.addEventListener("change", async (e) => {
+          const bookingId = Number(e.target.dataset.id)
+          const newStatus = e.target.value
+          e.target.disabled = true
+          try {
+            await updateBookingStatus(bookingId, newStatus)
+            toast(`อัปเดตสถานะการจอง #${bookingId} เป็น "${STATUS_LABEL[newStatus]}" เรียบร้อย`, "success")
+            const target = allBookings.find((b) => b.id === bookingId)
+            if (target) target.status = newStatus
+            renderRows()
+          } catch (err) {
+            toast(`อัปเดตไม่สำเร็จ: ${err.message}`, "error")
+            e.target.disabled = false
+          }
+        })
+      })
+
+      if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
+    }
+
     async function load() {
       try {
-        const bookings = await getBookings()
-        // ระดับข้อมูลของแอปนี้เล็ก (โปรเจกต์ lab) ยิง detail ทีละตัวเพื่อโชว์ชื่อลูกค้า/ของเก่า/ของใหม่ได้เลย
-        const details = await Promise.all(bookings.map((b) => getBookingDetail(b.id).catch(() => null)))
-        allBookings = details.filter(Boolean).sort((a, b) => b.id - a.id)
+        const [bookings, items, products, usersRes] = await Promise.all([
+          getBookings(),
+          getItems(),
+          getProducts(),
+          getUsers(1, 100).catch(() => ({ items: [] })),
+        ])
+
+        allBookings = bookings.sort((a, b) => b.id - a.id)
+        items.forEach((i) => { allItems[i.id] = i })
+        products.forEach((p) => { allProducts[p.id] = p })
+        const userList = Array.isArray(usersRes) ? usersRes : usersRes.items || []
+        userList.forEach((u) => { allUsers[u.id] = u })
+
         loadingMsg.style.display = "none"
         tableWrap.style.display = "block"
         renderRows()
       } catch (err) {
         loadingMsg.style.display = "none"
         errorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
-        errorMsg.style.display = "block"
+        errorMsg.style.display = "flex"
       }
     }
-
-    renderStatusFilter()
-    load()
   </script>
 </body>
 </html>

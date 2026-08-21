@@ -6,198 +6,274 @@
   <title>รายละเอียดการจอง — The Disposal Guilt</title>
   <link rel="stylesheet" href="../css/main.css" />
   <style>
-    .timeline-v { padding-left: 4px; }
+    .timeline-v { padding-left: var(--sp-2); margin: var(--sp-4) 0; }
     .timeline-v-step {
       display: flex;
-      gap: 12px;
+      gap: var(--sp-3);
       position: relative;
-      padding-bottom: 22px;
+      padding-bottom: var(--sp-6);
     }
     .timeline-v-step:last-child { padding-bottom: 0; }
     .timeline-v-step .dot {
-      width: 14px;
-      height: 14px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      background: var(--border);
+      background: var(--surface-2);
+      border: 2px solid var(--border);
       flex-shrink: 0;
       margin-top: 2px;
       position: relative;
       z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .timeline-v-step.done .dot { background: var(--ok); }
-    .timeline-v-step.current .dot { background: var(--accent); }
+    .timeline-v-step.done .dot { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .timeline-v-step.current .dot { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 0 4px var(--accent-bg); }
     .timeline-v-step::before {
       content: '';
       position: absolute;
-      left: 6px;
-      top: 16px;
-      bottom: -6px;
+      left: 8px;
+      top: 20px;
+      bottom: -4px;
       width: 2px;
       background: var(--border);
     }
     .timeline-v-step:last-child::before { display: none; }
     .timeline-v-step.done::before { background: var(--ok); }
-    .timeline-v-step .step-label { font-size: 13px; color: var(--muted-2); }
-    .timeline-v-step.done .step-label, .timeline-v-step.current .step-label { color: var(--ink); font-weight: 500; }
+    .timeline-v-step .step-label { font-size: 14px; color: var(--muted); }
+    .timeline-v-step.done .step-label, .timeline-v-step.current .step-label { color: var(--ink); font-weight: 700; }
 
     .summary-row {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       font-size: 13px;
-      padding: 6px 0;
+      padding: var(--sp-2) 0;
       border-bottom: 1px solid var(--border-light);
     }
     .summary-row:last-child { border-bottom: none; }
     .summary-row .label { color: var(--muted); }
-    .summary-row .value { font-weight: 500; text-align: right; }
-
-    .block-title { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .summary-row .value { font-weight: 600; text-align: right; color: var(--ink); }
   </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
-  <div class="container container-md">
-    <h1>รายละเอียดการจอง</h1>
-    <p class="subtitle" id="booking-id-label">กำลังโหลด...</p>
-
-    <div class="msg msg-error" id="error-msg"></div>
-
-    <div id="content" style="display: none;">
-      <div class="card" id="timeline-card">
-        <div class="block-title">สถานะ</div>
-        <div id="timeline-wrap"></div>
+  <main class="main-content">
+    <div class="container-lg">
+      <div class="page-header">
+        <div class="page-header-main">
+          <h1><i data-lucide="calendar-check" style="vertical-align: middle; color: var(--accent); margin-right: 8px;"></i>รายละเอียดการจอง <span id="header-id">-</span></h1>
+          <p class="subtitle" style="margin-bottom: 0;">ตรวจสอบสถานะการเดินทางของช่าง และรายละเอียดการรับ-ส่งของ</p>
+        </div>
+        <div class="toolbar">
+          <a href="booking-status.html" class="btn btn-outline btn-sm"><i data-lucide="arrow-left"></i> กลับไปรายการจอง</a>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="block-title">ของเก่าที่รับ</div>
-        <div id="item-summary"></div>
-      </div>
+      <div id="loading-msg" class="empty-state">กำลังดึงรายละเอียดการจอง...</div>
+      <div class="msg msg-error" id="error-msg"></div>
 
-      <div class="card">
-        <div class="block-title">ของใหม่ที่ส่ง</div>
-        <div id="product-summary"></div>
-      </div>
+      <!-- 2-Column Split Layout -->
+      <div class="split-layout" id="content" style="display: none;">
+        <!-- Left: Timeline & Order Info -->
+        <div>
+          <!-- Timeline Card -->
+          <div class="card card-static" style="border-left-color: var(--accent);">
+            <h2 style="font-size: 16px; margin-bottom: var(--sp-3);"><i data-lucide="activity"></i> สถานะความคืบหน้า</h2>
+            <div class="timeline-v" id="timeline"></div>
+          </div>
 
-      <div class="card">
-        <div class="block-title">นัดหมาย</div>
-        <div id="booking-summary"></div>
-      </div>
+          <!-- Items Info Card -->
+          <div class="card card-static">
+            <h2 style="font-size: 16px; margin-bottom: var(--sp-3);"><i data-lucide="package"></i> รายละเอียดของเก่าและของใหม่</h2>
+            <div id="items-info"></div>
+          </div>
 
-      <div class="card" id="action-card" style="display: none;">
-        <button class="btn btn-danger btn-block" id="cancel-btn" style="margin-top: 0;">ยกเลิกการจอง</button>
+          <!-- Appointment & Address Card -->
+          <div class="card card-static">
+            <h2 style="font-size: 16px; margin-bottom: var(--sp-3);"><i data-lucide="map-pin"></i> วันเวลาและสถานที่นัดหมาย</h2>
+            <div id="appointment-info"></div>
+          </div>
+        </div>
+
+        <!-- Right: Sticky Order Summary & Cancel Action -->
+        <div class="sticky-side">
+          <div class="card card-static" style="padding: var(--sp-6); border-left-color: var(--ok);">
+            <h2 style="font-size: 16px; margin-bottom: var(--sp-4);"><i data-lucide="receipt"></i> ยอดสุทธิของการจอง</h2>
+
+            <div style="background: var(--surface-2); border-radius: var(--radius-md); padding: var(--sp-4); border: 1px solid var(--border); margin-bottom: var(--sp-5);">
+              <div class="summary-row">
+                <span class="label">สถานะ</span>
+                <span class="value" id="status-badge-wrap">-</span>
+              </div>
+              <div class="summary-row">
+                <span class="label">ราคาสินค้าใหม่</span>
+                <span class="value" id="product-price-val">฿0</span>
+              </div>
+              <div class="summary-row">
+                <span class="label">ส่วนลด Trade-in</span>
+                <span class="value text-ok" id="discount-price-val">- ฿0</span>
+              </div>
+              <div class="summary-row" style="border-top: 2px dashed var(--border); margin-top: 6px; padding-top: 10px; font-size: 16px;">
+                <span style="font-weight: 700;">ยอดที่จ่าย:</span>
+                <span class="value text-ok" id="total-price-val" style="font-size: 18px;">฿0 บาท</span>
+              </div>
+            </div>
+
+            <button class="btn btn-danger btn-block" id="cancel-btn" style="display: none;">
+              <i data-lucide="x-circle"></i> ขอยกเลิกการจองนี้
+            </button>
+            <div id="cancel-note" style="display: none; font-size: 12px; color: var(--muted); margin-top: 8px; text-align: center;">
+              * ยกเลิกได้เฉพาะสถานะรอยืนยัน หรือยืนยันแล้วเท่านั้น
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </main>
 
+  <div id="app-footer"></div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/components.js"></script>
   <script>
     requireLogin()
-    renderNav({ root: "../", active: "" })
+    renderNav({ root: "../", active: "bookings" })
+    renderFooter({ root: "../", dir: "pages" })
+
+    const params = new URLSearchParams(location.search)
+    const bookingId = params.get('id')
+
+    const loadingMsg = document.getElementById('loading-msg')
+    const errorMsg = document.getElementById('error-msg')
+    const content = document.getElementById('content')
+    const cancelBtn = document.getElementById('cancel-btn')
+    const cancelNote = document.getElementById('cancel-note')
+
+    const STEPS = [
+      { key: 'pending', label: '1. สร้างคำขอการจองแล้ว' },
+      { key: 'confirmed', label: '2. แอดมินยืนยันการจองเรียบร้อย' },
+      { key: 'in_transit', label: '3. ทีมช่างกำลังเดินทางไปหาคุณ' },
+      { key: 'completed', label: '4. ส่งมอบของใหม่และรับของเก่าเสร็จสิ้น' },
+    ]
+    const STATUS_ORDER = ['pending', 'confirmed', 'in_transit', 'completed']
 
     const FURNITURE_LABEL = {
-      sofa: "โซฟา", table: "โต๊ะ", chair: "เก้าอี้", bed: "เตียง",
-      wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ", other: "อื่นๆ",
+      sofa: 'โซฟา', table: 'โต๊ะ', chair: 'เก้าอี้', bed: 'เตียง',
+      wardrobe: 'ตู้เสื้อผ้า', shelf: 'ชั้นวางของ', other: 'อื่นๆ',
     }
-    const CONDITION_LABEL = { good: "ดี", fair: "พอใช้", poor: "ทรุดโทรม" }
 
-    const STEPS = ["pending", "confirmed", "in_transit", "completed"]
-    const STEP_LABELS = { pending: "รอยืนยัน", confirmed: "ยืนยันแล้ว", in_transit: "ช่างกำลังมา", completed: "เสร็จสิ้น" }
-
-    const bookingId = new URLSearchParams(location.search).get("id")
-
-    const bookingIdLabel = document.getElementById("booking-id-label")
-    const errorMsg = document.getElementById("error-msg")
-    const content = document.getElementById("content")
-    const timelineWrap = document.getElementById("timeline-wrap")
-    const actionCard = document.getElementById("action-card")
-    const cancelBtn = document.getElementById("cancel-btn")
-
-    function formatDateTime(dt) {
-      const d = new Date(dt)
-      return d.toLocaleString("th-TH", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    const STATUS_LABEL = {
+      pending: 'รอยืนยัน', confirmed: 'ยืนยันแล้ว', in_transit: 'กำลังขนส่ง',
+      completed: 'เสร็จสิ้น', cancelled: 'ยกเลิกแล้ว',
+    }
+    const STATUS_BADGE_CLASS = {
+      pending: 'badge-warning', confirmed: 'badge-accent', in_transit: 'badge-accent',
+      completed: 'badge-ok', cancelled: 'badge-danger',
     }
 
     function renderTimeline(status) {
-      if (status === "cancelled") {
-        timelineWrap.innerHTML = `<span class="badge badge-danger">การจองนี้ถูกยกเลิกแล้ว</span>`
-        return
-      }
-      const currentIdx = STEPS.indexOf(status)
-      timelineWrap.innerHTML = `
-        <div class="timeline-v">
-          ${STEPS.map((step, idx) => `
-            <div class="timeline-v-step ${idx < currentIdx ? "done" : ""} ${idx === currentIdx ? "current" : ""}">
-              <div class="dot"></div>
-              <div class="step-label">${STEP_LABELS[step]}</div>
-            </div>
-          `).join("")}
-        </div>
-      `
-    }
-
-    async function load() {
-      if (!bookingId) {
-        bookingIdLabel.textContent = "ไม่พบรหัสการจอง"
-        return
-      }
-
-      let detail
-      try {
-        detail = await getBookingDetail(bookingId)
-      } catch (err) {
-        bookingIdLabel.textContent = "โหลดข้อมูลไม่สำเร็จ"
-        errorMsg.textContent = err.message
-        errorMsg.style.display = "block"
-        return
-      }
-
-      bookingIdLabel.textContent = `การจอง #${detail.id}`
-      content.style.display = "block"
-
-      renderTimeline(detail.status)
-
-      document.getElementById("item-summary").innerHTML = `
-        <div class="summary-row"><span class="label">ประเภท</span><span class="value">${FURNITURE_LABEL[detail.item.furniture_type] || detail.item.furniture_type}</span></div>
-        <div class="summary-row"><span class="label">สภาพ</span><span class="value">${CONDITION_LABEL[detail.item.condition] || detail.item.condition}</span></div>
-        <div class="summary-row"><span class="label">ส่วนลดที่ได้</span><span class="value">${detail.item.estimated_price.toLocaleString()} บาท</span></div>
-      `
-
-      document.getElementById("product-summary").innerHTML = detail.product
-        ? `
-          <div class="summary-row"><span class="label">สินค้า</span><span class="value">${detail.product.name}</span></div>
-          <div class="summary-row"><span class="label">ราคา</span><span class="value">${detail.product.price.toLocaleString()} บาท</span></div>
+      const timelineEl = document.getElementById('timeline')
+      if (status === 'cancelled') {
+        timelineEl.innerHTML = `
+          <div class="timeline-v-step done">
+            <div class="dot" style="background:var(--danger); border-color:var(--danger);">✕</div>
+            <div class="step-label" style="color:var(--danger); font-weight:700;">การจองนี้ถูกยกเลิกแล้ว</div>
+          </div>
         `
-        : `<div class="summary-row"><span class="label">ไม่ได้เลือกสินค้าใหม่</span><span class="value">รับเป็นส่วนลดคืนอย่างเดียว</span></div>`
-
-      document.getElementById("booking-summary").innerHTML = `
-        <div class="summary-row"><span class="label">วันเวลา</span><span class="value">${formatDateTime(detail.timeslot.datetime)}</span></div>
-        <div class="summary-row"><span class="label">ทีมช่าง</span><span class="value">${detail.timeslot.technician_name}</span></div>
-        <div class="summary-row"><span class="label">ที่อยู่</span><span class="value">${detail.address}</span></div>
-        <div class="summary-row"><span class="label">ยอดรวม</span><span class="value">${detail.total_price.toLocaleString()} บาท</span></div>
-      `
-
-      const cancellable = ["pending", "confirmed"].includes(detail.status)
-      actionCard.style.display = cancellable ? "block" : "none"
-
-      cancelBtn.onclick = async () => {
-        const ok = await confirmDialog("ต้องการยกเลิกการจองนี้ใช่หรือไม่? การยกเลิกไม่สามารถย้อนกลับได้", { confirmLabel: "ยกเลิกการจอง" })
-        if (!ok) return
-        cancelBtn.disabled = true
-        try {
-          await cancelBooking(detail.id)
-          toast("ยกเลิกการจองสำเร็จ", "success")
-          await load()
-        } catch (err) {
-          toast(`ยกเลิกไม่สำเร็จ: ${err.message}`, "error")
-          cancelBtn.disabled = false
-        }
+        return
       }
+
+      const curIdx = STATUS_ORDER.indexOf(status)
+      timelineEl.innerHTML = STEPS.map((s, idx) => {
+        let cls = ''
+        if (idx < curIdx) cls = 'done'
+        else if (idx === curIdx) cls = 'current'
+        return `
+          <div class="timeline-v-step ${cls}">
+            <div class="dot"></div>
+            <div class="step-label">${s.label}</div>
+          </div>
+        `
+      }).join('')
     }
 
-    load()
+    if (!bookingId) {
+      loadingMsg.style.display = 'none'
+      errorMsg.textContent = 'ไม่พบรหัสการจอง'
+      errorMsg.style.display = 'flex'
+    } else {
+      getBookingDetail(bookingId).then(data => {
+        loadingMsg.style.display = 'none'
+
+        document.getElementById('header-id').textContent = `#${data.id}`
+        renderTimeline(data.status)
+
+        // Status badge
+        const badgeCls = STATUS_BADGE_CLASS[data.status] || 'badge-muted'
+        document.getElementById('status-badge-wrap').innerHTML = `<span class="badge ${badgeCls}">${STATUS_LABEL[data.status] || data.status}</span>`
+
+        // Items Info
+        const item = data.item
+        const product = data.product
+        document.getElementById('items-info').innerHTML = `
+          <div class="summary-row"><span class="label">ของเก่าที่รับ</span><span class="value">${FURNITURE_LABEL[item.furniture_type] || item.furniture_type} (${item.condition})</span></div>
+          <div class="summary-row"><span class="label">มูลค่าประเมิน (ส่วนลด)</span><span class="value text-ok">- ฿${item.estimated_price.toLocaleString()} บาท</span></div>
+          <div class="summary-row"><span class="label">ลดก๊าซ CO₂ ได้</span><span class="value text-ok"><i data-lucide="leaf" style="width:12px;height:12px;vertical-align:middle;"></i> ${item.co2_saved_kg.toFixed(1)} กก.</span></div>
+          <div class="summary-row"><span class="label">สินค้าใหม่ที่ส่ง</span><span class="value">${product ? `${product.name} (฿${product.price.toLocaleString()})` : 'ไม่เลือกของใหม่'}</span></div>
+        `
+
+        // Appointment & Address
+        const ts = data.timeslot
+        const d = new Date(ts.datetime)
+        const dateStr = d.toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+        const timeStr = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.'
+
+        document.getElementById('appointment-info').innerHTML = `
+          <div class="summary-row"><span class="label">วันเวลานัดหมาย</span><span class="value">${dateStr} เวลา ${timeStr}</span></div>
+          <div class="summary-row"><span class="label">ทีมช่างผู้รับผิดชอบ</span><span class="value text-accent"><i data-lucide="user" style="width:12px;height:12px;vertical-align:middle;"></i> ${ts.technician_name}</span></div>
+          <div class="summary-row"><span class="label">สถานที่รับ-ส่งของ</span><span class="value" style="max-width:65%;">${data.address}</span></div>
+        `
+
+        // Financials
+        document.getElementById('product-price-val').textContent = product ? `฿${product.price.toLocaleString()} บาท` : '฿0'
+        document.getElementById('discount-price-val').textContent = `- ฿${item.estimated_price.toLocaleString()} บาท`
+        document.getElementById('total-price-val').textContent = `฿${data.total_price.toLocaleString()} บาท`
+
+        // Cancel button state
+        if (data.status === 'pending' || data.status === 'confirmed') {
+          cancelBtn.style.display = 'inline-flex'
+          cancelNote.style.display = 'block'
+          cancelBtn.addEventListener('click', async () => {
+            const ok = await confirmDialog(`ยืนยันการยกเลิกการจอง #${data.id} หรือไม่?`, { confirmLabel: 'ยกเลิกการจอง' })
+            if (!ok) return
+
+            cancelBtn.disabled = true
+            try {
+              await cancelBooking(data.id)
+              toast('ยกเลิกการจองสำเร็จ', 'success')
+              setTimeout(() => location.reload(), 800)
+            } catch (err) {
+              toast(`ยกเลิกไม่สำเร็จ: ${err.message}`, 'error')
+              cancelBtn.disabled = false
+            }
+          })
+        }
+
+        content.style.display = 'grid'
+        if (typeof lucide !== 'undefined') lucide.createIcons({ nameAttr: 'data-lucide' })
+      }).catch(err => {
+        loadingMsg.style.display = 'none'
+        errorMsg.textContent = `โหลดรายละเอียดการจองไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = 'flex'
+      })
+    }
+
+    initPage()
   </script>
 </body>
 </html>

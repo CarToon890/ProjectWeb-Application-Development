@@ -72,7 +72,10 @@
   </div>
 
   <!-- โหลด api.js ก่อน (มีฟังก์ชัน register, checkUsername) -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/components.js"></script>
   <script>
     const usernameInput = document.getElementById('username')
     const usernameHint = document.getElementById('username-hint')
@@ -133,6 +136,8 @@
         submitBtn.textContent = 'สมัครสมาชิก'
       }
     })
+
+    initPage()
   </script>
 </body>
 </html>

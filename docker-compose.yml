@@ -4,6 +4,8 @@ services:
     ports: ["8000:8000"]
     volumes:
       - ./backend/app:/app/app
+      - ./backend/alembic:/app/alembic
+      - ./backend/alembic.ini:/app/alembic.ini
       - ./frontend:/app/frontend
     env_file: .env
     depends_on:

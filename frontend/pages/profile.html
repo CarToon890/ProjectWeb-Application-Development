@@ -3,157 +3,189 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>โปรไฟล์ — The Disposal Guilt</title>
+  <title>โปรไฟล์ & การตั้งค่า — The Disposal Guilt</title>
   <link rel="stylesheet" href="../css/main.css" />
-  <style>
-    .container { max-width: 520px; }
-  </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
-  <div class="container">
-    <h1>โปรไฟล์</h1>
-    <p class="subtitle">แก้ไขข้อมูลส่วนตัวและรหัสผ่านของคุณ</p>
-
-    <form id="profile-form" class="card">
-      <h2>ข้อมูลส่วนตัว</h2>
-
-      <div class="field">
-        <label for="username">Username</label>
-        <input type="text" id="username" disabled />
+  <main class="main-content">
+    <div class="container-md">
+      <div class="page-header">
+        <div class="page-header-main">
+          <h1><i data-lucide="user" style="vertical-align: middle; color: var(--accent); margin-right: 8px;"></i>โปรไฟล์และข้อมูลบัญชี</h1>
+          <p class="subtitle" style="margin-bottom: 0;">จัดการข้อมูลส่วนตัว เบอร์โทรศัพท์ ที่อยู่จัดส่ง และรหัสผ่าน</p>
+        </div>
       </div>
 
-      <div class="field">
-        <label for="email">Email</label>
-        <input type="email" name="email" id="email" required />
+      <div class="grid-cols-2" style="align-items: start;">
+        <!-- 1. Profile Info Form -->
+        <form id="profile-form" class="card card-static" style="border-left-color: var(--accent);">
+          <h2 style="font-size: 16px; margin-bottom: var(--sp-4);">
+            <i data-lucide="user-check"></i> ข้อมูลส่วนตัว
+          </h2>
+
+          <div class="field">
+            <label for="username">ชื่อผู้ใช้ (Username)</label>
+            <input type="text" id="username" disabled />
+          </div>
+
+          <div class="field">
+            <label for="email">อีเมล (Email)</label>
+            <input type="email" name="email" id="email" required />
+          </div>
+
+          <div class="field">
+            <label for="full_name">ชื่อ-นามสกุล</label>
+            <input type="text" name="full_name" id="full_name" required />
+          </div>
+
+          <div class="field">
+            <label for="phone">เบอร์โทรศัพท์ติดต่อ</label>
+            <input type="tel" name="phone" id="phone" placeholder="08x-xxx-xxxx" />
+          </div>
+
+          <div class="field">
+            <label for="address">ที่อยู่เริ่มต้นสำหรับรับ-ส่งของ</label>
+            <textarea name="address" id="address" placeholder="บ้านเลขที่ ซอย ถนน ตำบล อำเภอ จังหวัด"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" id="save-btn">
+            <i data-lucide="save"></i> บันทึกข้อมูลส่วนตัว
+          </button>
+          <div class="msg msg-error" id="profile-error"></div>
+          <div class="msg msg-success" id="profile-success"></div>
+        </form>
+
+        <!-- 2. Change Password Form -->
+        <form id="password-form" class="card card-static" style="border-left-color: var(--warning);">
+          <h2 style="font-size: 16px; margin-bottom: var(--sp-4);">
+            <i data-lucide="lock"></i> เปลี่ยนรหัสผ่าน
+          </h2>
+
+          <div class="field">
+            <label for="old_password">รหัสผ่านปัจจุบัน</label>
+            <input type="password" name="old_password" id="old_password" required autocomplete="current-password" />
+          </div>
+
+          <div class="field">
+            <label for="new_password">รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)</label>
+            <input type="password" name="new_password" id="new_password" required minlength="6" autocomplete="new-password" />
+          </div>
+
+          <div class="field">
+            <label for="confirm_password">ยืนยันรหัสผ่านใหม่</label>
+            <input type="password" name="confirm_password" id="confirm_password" required minlength="6" autocomplete="new-password" />
+          </div>
+
+          <button type="submit" class="btn btn-outline btn-block" id="change-pwd-btn">
+            <i data-lucide="key"></i> อัปเดตรหัสผ่าน
+          </button>
+          <div class="msg msg-error" id="pwd-error"></div>
+          <div class="msg msg-success" id="pwd-success"></div>
+        </form>
       </div>
-
-      <div class="field">
-        <label for="full_name">ชื่อ-นามสกุล</label>
-        <input type="text" name="full_name" id="full_name" required />
-      </div>
-
-      <div class="field">
-        <label for="phone">เบอร์โทร</label>
-        <input type="tel" name="phone" id="phone" />
-      </div>
-
-      <div class="field">
-        <label for="address">ที่อยู่</label>
-        <input type="text" name="address" id="address" />
-      </div>
-
-      <button type="submit" class="btn btn-primary btn-block" id="save-btn">บันทึกข้อมูล</button>
-      <div class="msg msg-error" id="profile-error"></div>
-      <div class="msg msg-success" id="profile-success"></div>
-    </form>
-
-    <form id="password-form" class="card">
-      <h2>เปลี่ยนรหัสผ่าน</h2>
-
-      <div class="field">
-        <label for="old_password">รหัสผ่านเดิม</label>
-        <input type="password" name="old_password" id="old_password" required autocomplete="current-password" />
-      </div>
-
-      <div class="field">
-        <label for="new_password">รหัสผ่านใหม่</label>
-        <input type="password" name="new_password" id="new_password" required minlength="6" autocomplete="new-password" />
-      </div>
-
-      <button type="submit" class="btn btn-primary btn-block" id="password-btn">เปลี่ยนรหัสผ่าน</button>
-      <div class="msg msg-error" id="password-error"></div>
-      <div class="msg msg-success" id="password-success"></div>
-    </form>
-
-    <div class="card" id="admin-panel-card" style="display: none;">
-      <h2>สิทธิ์ผู้ดูแลระบบ</h2>
-      <a href="../admin/index.html" class="btn btn-outline btn-block" style="text-decoration: none; text-align: center; display: block;">เข้าสู่หลังบ้าน (Admin)</a>
     </div>
-  </div>
+  </main>
 
+  <div id="app-footer"></div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/components.js"></script>
   <script>
     requireLogin()
     renderNav({ root: "../", active: "profile" })
+    renderFooter({ root: "../", dir: "pages" })
 
-    let currentUserId = null
-    const profileForm = document.getElementById('profile-form')
-    const saveBtn = document.getElementById('save-btn')
-    const profileError = document.getElementById('profile-error')
-    const profileSuccess = document.getElementById('profile-success')
+    const profileForm = document.getElementById("profile-form")
+    const saveBtn = document.getElementById("save-btn")
+    const profileError = document.getElementById("profile-error")
+    const profileSuccess = document.getElementById("profile-success")
+
+    const passwordForm = document.getElementById("password-form")
+    const changePwdBtn = document.getElementById("change-pwd-btn")
+    const pwdError = document.getElementById("pwd-error")
+    const pwdSuccess = document.getElementById("pwd-success")
 
     async function loadProfile() {
       try {
-        const me = await getMe()
-        currentUserId = me.id
-        cacheRole(me.role)
-        document.getElementById('username').value = me.username
-        document.getElementById('email').value = me.email
-        document.getElementById('full_name').value = me.full_name
-        document.getElementById('phone').value = me.phone || ''
-        document.getElementById('address').value = me.address || ''
-
-        if (me.role === 'admin') {
-          document.getElementById('admin-panel-card').style.display = 'block'
-        }
+        const user = await getMe()
+        document.getElementById("username").value = `@${user.username}`
+        document.getElementById("email").value = user.email || ""
+        document.getElementById("full_name").value = user.full_name || ""
+        document.getElementById("phone").value = user.phone || ""
+        document.getElementById("address").value = user.address || ""
       } catch (err) {
-        profileError.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
-        profileError.style.display = 'block'
+        toast(`โหลดข้อมูลโปรไฟล์ไม่สำเร็จ: ${err.message}`, "error")
       }
     }
 
-    profileForm.addEventListener('submit', async (e) => {
+    profileForm.addEventListener("submit", async (e) => {
       e.preventDefault()
-      profileError.style.display = 'none'
-      profileSuccess.style.display = 'none'
+      profileError.style.display = "none"
+      profileSuccess.style.display = "none"
+
       saveBtn.disabled = true
+      saveBtn.innerHTML = "กำลังบันทึก..."
 
       try {
-        await updateUser(currentUserId, {
+        await updateMe({
           email: profileForm.email.value.trim(),
           full_name: profileForm.full_name.value.trim(),
           phone: profileForm.phone.value.trim() || null,
           address: profileForm.address.value.trim() || null,
         })
-        profileSuccess.textContent = 'บันทึกข้อมูลสำเร็จ'
-        profileSuccess.style.display = 'block'
+        profileSuccess.textContent = "บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว"
+        profileSuccess.style.display = "flex"
+        toast("บันทึกข้อมูลส่วนตัวสำเร็จ", "success")
       } catch (err) {
-        profileError.textContent = `บันทึกไม่สำเร็จ: ${err.message}`
-        profileError.style.display = 'block'
+        profileError.textContent = err.message
+        profileError.style.display = "flex"
       } finally {
         saveBtn.disabled = false
+        saveBtn.innerHTML = '<i data-lucide="save"></i> บันทึกข้อมูลส่วนตัว'
+        if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
       }
     })
 
-    const passwordForm = document.getElementById('password-form')
-    const passwordBtn = document.getElementById('password-btn')
-    const passwordError = document.getElementById('password-error')
-    const passwordSuccess = document.getElementById('password-success')
-
-    passwordForm.addEventListener('submit', async (e) => {
+    passwordForm.addEventListener("submit", async (e) => {
       e.preventDefault()
-      passwordError.style.display = 'none'
-      passwordSuccess.style.display = 'none'
-      passwordBtn.disabled = true
+      pwdError.style.display = "none"
+      pwdSuccess.style.display = "none"
+
+      const oldPwd = passwordForm.old_password.value
+      const newPwd = passwordForm.new_password.value
+      const confirmPwd = passwordForm.confirm_password.value
+
+      if (newPwd !== confirmPwd) {
+        pwdError.textContent = "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน"
+        pwdError.style.display = "flex"
+        return
+      }
+
+      changePwdBtn.disabled = true
+      changePwdBtn.innerHTML = "กำลังเปลี่ยนรหัสผ่าน..."
 
       try {
-        await changePassword(passwordForm.old_password.value, passwordForm.new_password.value)
-        passwordSuccess.textContent = 'เปลี่ยนรหัสผ่านสำเร็จ'
-        passwordSuccess.style.display = 'block'
+        await changePassword(oldPwd, newPwd)
+        pwdSuccess.textContent = "เปลี่ยนรหัสผ่านสำเร็จเรียบร้อย"
+        pwdSuccess.style.display = "flex"
+        toast("เปลี่ยนรหัสผ่านสำเร็จ", "success")
         passwordForm.reset()
       } catch (err) {
-        passwordError.textContent = `เปลี่ยนรหัสผ่านไม่สำเร็จ: ${err.message}`
-        passwordError.style.display = 'block'
+        pwdError.textContent = err.message
+        pwdError.style.display = "flex"
       } finally {
-        passwordBtn.disabled = false
+        changePwdBtn.disabled = false
+        changePwdBtn.innerHTML = '<i data-lucide="key"></i> อัปเดตรหัสผ่าน'
+        if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
       }
     })
 
     loadProfile()
+    initPage()
   </script>
 </body>
 </html>

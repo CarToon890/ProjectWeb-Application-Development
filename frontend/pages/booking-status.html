@@ -6,111 +6,173 @@
   <title>การจองของฉัน — The Disposal Guilt</title>
   <link rel="stylesheet" href="../css/main.css" />
   <style>
-    .grid {
+    .booking-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: var(--sp-6);
     }
+    .booking-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-5);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      border-left: 4px solid var(--accent);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .booking-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .booking-card.completed { border-left-color: var(--ok); }
+    .booking-card.cancelled { border-left-color: var(--danger); opacity: 0.85; }
 
-    .booking-card { cursor: pointer; }
-    .booking-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
-    .booking-title { font-size: 15px; font-weight: 600; }
-    .booking-sub { font-size: 12px; color: var(--muted-2); }
+    .booking-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--sp-3);
+      padding-bottom: var(--sp-2);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .booking-title { font-size: 16px; font-weight: 700; color: var(--ink); }
+    .booking-sub { font-size: 12px; color: var(--muted); }
 
-    .summary-row {
+    .booking-row {
       display: flex;
       justify-content: space-between;
       font-size: 13px;
-      padding: 4px 0;
+      padding: var(--sp-1) 0;
     }
-    .summary-row .label { color: var(--muted); }
-    .summary-row .value { font-weight: 500; }
+    .booking-row .label { color: var(--muted); }
+    .booking-row .value { font-weight: 600; color: var(--ink); }
   </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
-  <div class="container container-lg">
-    <h1>การจองของฉัน</h1>
-    <p class="subtitle">รายการนัดหมายทั้งหมดของคุณ เรียงจากล่าสุด</p>
+  <main class="main-content">
+    <div class="container-xl">
+      <div class="page-header">
+        <div class="page-header-main">
+          <h1><i data-lucide="calendar-check" style="vertical-align: middle; color: var(--accent); margin-right: 8px;"></i>การจองของฉัน</h1>
+          <p class="subtitle" style="margin-bottom: 0;">ประวัติและสถานะการนัดหมาย Trade-in ทั้งหมดของคุณ</p>
+        </div>
+        <div class="toolbar">
+          <a href="assessment-form.html" class="btn btn-primary btn-sm"><i data-lucide="plus"></i> เริ่มการประเมินใหม่</a>
+        </div>
+      </div>
 
-    <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
-    <div class="msg msg-error" id="error-msg"></div>
-    <div class="empty-state" id="empty-msg" style="display: none;">
-      ยังไม่มีการจอง — <a href="assessment-form.html" style="color: var(--accent);">เริ่มประเมินของเก่าเลย</a>
+      <div id="loading-msg" class="empty-state">กำลังดึงประวัติการจอง...</div>
+      <div class="msg msg-error" id="error-msg"></div>
+
+      <div class="empty-state" id="empty-msg" style="display: none;">
+        <i data-lucide="calendar-x"></i>
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">คุณยังไม่มีรายการจองในระบบ</div>
+        <a href="assessment-form.html" class="btn btn-primary" style="margin-top: 8px;">
+          <i data-lucide="camera"></i> เริ่มประเมินของเก่าเพื่อรับส่วนลด
+        </a>
+      </div>
+
+      <div class="booking-grid" id="booking-grid"></div>
     </div>
+  </main>
 
-    <div class="grid" id="booking-grid"></div>
-  </div>
+  <div id="app-footer"></div>
 
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/components.js"></script>
   <script>
     requireLogin()
     renderNav({ root: "../", active: "bookings" })
+    renderFooter({ root: "../", dir: "pages" })
 
     const STATUS_LABEL = {
       pending: "รอยืนยัน", confirmed: "ยืนยันแล้ว", in_transit: "กำลังขนส่ง",
       completed: "เสร็จสิ้น", cancelled: "ยกเลิกแล้ว",
     }
     const STATUS_BADGE_CLASS = {
-      pending: "badge-muted", confirmed: "badge-accent", in_transit: "badge-accent",
+      pending: "badge-warning", confirmed: "badge-accent", in_transit: "badge-accent",
       completed: "badge-ok", cancelled: "badge-danger",
     }
 
-    const loadingMsg = document.getElementById("loading-msg")
-    const errorMsg = document.getElementById("error-msg")
-    const emptyMsg = document.getElementById("empty-msg")
     const grid = document.getElementById("booking-grid")
+    const loadingMsg = document.getElementById("loading-msg")
+    const emptyMsg = document.getElementById("empty-msg")
+    const errorMsg = document.getElementById("error-msg")
 
-    function formatDate(dt) {
-      const d = new Date(dt)
-      return d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })
+    function formatDate(dateStr) {
+      if (!dateStr) return "-"
+      const d = new Date(dateStr)
+      return d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" }) + " " + d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) + " น."
     }
 
-    async function load() {
-      let bookings
+    async function loadBookings() {
       try {
-        bookings = await getBookings()
+        const bookings = await getBookings()
+        loadingMsg.style.display = "none"
+
+        if (bookings.length === 0) {
+          emptyMsg.style.display = "block"
+          return
+        }
+
+        bookings.sort((a, b) => b.id - a.id)
+
+        for (const b of bookings) {
+          const card = document.createElement("div")
+          card.className = `booking-card ${b.status}`
+          const badgeClass = STATUS_BADGE_CLASS[b.status] || "badge-muted"
+          const statusText = STATUS_LABEL[b.status] || b.status
+
+          card.innerHTML = `
+            <div class="booking-card-head">
+              <div>
+                <div class="booking-title">การจอง #${b.id}</div>
+                <div class="booking-sub">${formatDate(b.created_at)}</div>
+              </div>
+              <span class="badge ${badgeClass}">${statusText}</span>
+            </div>
+
+            <div class="booking-row">
+              <span class="label">รหัสของเก่า</span>
+              <span class="value">#${b.item_id}</span>
+            </div>
+            <div class="booking-row">
+              <span class="label">รหัสของใหม่</span>
+              <span class="value">${b.product_id ? `#${b.product_id}` : "ไม่มี (คืนส่วนลด)"}</span>
+            </div>
+            <div class="booking-row">
+              <span class="label">ยอดสุทธิที่ชำระ</span>
+              <span class="value text-ok">฿${b.total_price.toLocaleString()} บาท</span>
+            </div>
+
+            <div style="margin-top: var(--sp-4); text-align: right;">
+              <span style="font-size: 13px; color: var(--accent); font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                ดูรายละเอียด <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
+              </span>
+            </div>
+          `
+
+          card.addEventListener("click", () => {
+            location.href = `booking-detail.html?id=${b.id}`
+          })
+
+          grid.appendChild(card)
+        }
+
+        if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
       } catch (err) {
         loadingMsg.style.display = "none"
-        errorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
-        errorMsg.style.display = "block"
-        return
-      }
-
-      loadingMsg.style.display = "none"
-      bookings.sort((a, b) => b.id - a.id)
-
-      if (bookings.length === 0) {
-        emptyMsg.style.display = "block"
-        return
-      }
-
-      grid.innerHTML = ""
-      for (const booking of bookings) {
-        const card = document.createElement("div")
-        card.className = "card booking-card"
-        card.innerHTML = `
-          <div class="booking-card-head">
-            <div>
-              <div class="booking-title">การจอง #${booking.id}</div>
-              <div class="booking-sub">${formatDate(booking.created_at)}</div>
-            </div>
-            <span class="badge ${STATUS_BADGE_CLASS[booking.status] || "badge-muted"}">${STATUS_LABEL[booking.status] || booking.status}</span>
-          </div>
-          <div class="summary-row"><span class="label">ที่อยู่</span><span class="value">${booking.address}</span></div>
-          <div class="summary-row"><span class="label">ยอดรวม</span><span class="value">${booking.total_price.toLocaleString()} บาท</span></div>
-        `
-        card.addEventListener("click", () => {
-          location.href = `booking-detail.html?id=${booking.id}`
-        })
-        grid.appendChild(card)
+        errorMsg.textContent = `โหลดข้อมูลการจองไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = "flex"
       }
     }
 
-    load()
+    loadBookings()
+    initPage()
   </script>
 </body>
 </html>

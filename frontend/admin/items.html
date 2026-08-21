@@ -6,60 +6,91 @@
   <title>ของเก่าทั้งระบบ — Admin</title>
   <link rel="stylesheet" href="../css/main.css" />
   <style>
-    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
-    .filter-row select {
-      padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
-      font-size: 13px; font-family: inherit; background: var(--surface);
+    .item-thumb {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
     }
-    .item-photo { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; background: var(--bg); }
-    .item-photo-empty { width: 44px; height: 44px; border-radius: 6px; background: var(--bg); display: inline-block; }
-
-    .edit-inline { display: flex; gap: 6px; align-items: center; }
-    .edit-inline select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; }
+    .item-thumb-empty {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+      border: 1px dashed var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted-2);
+    }
+    .item-thumb-empty svg { width: 18px; height: 18px; }
   </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
-  <div class="container container-lg">
-    <h1>ของเก่าทั้งระบบ</h1>
-    <p class="subtitle">รายการของเก่าที่ลูกค้าส่งประเมินทั้งหมด</p>
+  <main class="main-content">
+    <div class="container-xl">
+      <div class="page-header">
+        <div class="page-header-main">
+          <h1><i data-lucide="archive" style="vertical-align: middle; color: var(--accent); margin-right: 8px;"></i>รายการของเก่าทั้งระบบ</h1>
+          <p class="subtitle" style="margin-bottom: 0;">ตรวจสอบรายการเฟอร์นิเจอร์เก่าที่ลูกค้าส่งประเมิน สภาพ และการส่งต่อ</p>
+        </div>
+        <div class="toolbar">
+          <select id="status-select" class="inline-select" style="min-width: 150px; padding: 9px 12px;">
+            <option value="">สถานะทั้งหมด</option>
+            <option value="pending">รอตรวจสอบ</option>
+            <option value="assessed">ประเมินแล้ว</option>
+            <option value="scheduled">นัดหมายแล้ว</option>
+            <option value="picked_up">รับของแล้ว</option>
+            <option value="donated">ส่งต่อสำเร็จ</option>
+          </select>
+          <select id="type-select" class="inline-select" style="min-width: 150px; padding: 9px 12px;">
+            <option value="">ประเภททั้งหมด</option>
+            <option value="sofa">โซฟา</option>
+            <option value="table">โต๊ะ</option>
+            <option value="chair">เก้าอี้</option>
+            <option value="bed">เตียง</option>
+            <option value="wardrobe">ตู้เสื้อผ้า</option>
+            <option value="shelf">ชั้นวางของ</option>
+            <option value="other">อื่นๆ</option>
+          </select>
+        </div>
+      </div>
 
-    <div class="filter-row">
-      <select id="status-select">
-        <option value="">สถานะ: ทั้งหมด</option>
-        <option value="pending">รอตรวจสอบ</option>
-        <option value="assessed">ประเมินแล้ว</option>
-        <option value="scheduled">นัดหมายแล้ว</option>
-        <option value="picked_up">รับของแล้ว</option>
-        <option value="donated">ส่งต่อสำเร็จ</option>
-      </select>
-      <select id="type-select">
-        <option value="">ประเภท: ทั้งหมด</option>
-        <option value="sofa">โซฟา</option>
-        <option value="table">โต๊ะ</option>
-        <option value="chair">เก้าอี้</option>
-        <option value="bed">เตียง</option>
-        <option value="wardrobe">ตู้เสื้อผ้า</option>
-        <option value="shelf">ชั้นวางของ</option>
-        <option value="other">อื่นๆ</option>
-      </select>
+      <div id="loading-msg" class="empty-state">กำลังโหลดรายการของเก่า...</div>
+      <div class="msg msg-error" id="error-msg"></div>
+
+      <div class="table-wrap" id="table-wrap" style="display: none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>รูปถ่าย</th>
+              <th>#</th>
+              <th>ประเภท</th>
+              <th>ระดับสภาพ</th>
+              <th>ราคาประเมิน</th>
+              <th>CO₂ ประหยัด</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="items-body"></tbody>
+        </table>
+      </div>
+
+      <div class="empty-state" id="empty-msg" style="display: none;">
+        <i data-lucide="package-search"></i>
+        <div>ไม่พบรายการของเก่าตามเงื่อนไขที่เลือก</div>
+      </div>
     </div>
+  </main>
 
-    <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
-    <div class="msg msg-error" id="error-msg"></div>
-    <div class="empty-state" id="empty-msg" style="display: none;">ไม่พบรายการในหมวดนี้</div>
+  <div id="app-footer"></div>
 
-    <div class="table-wrap" id="table-wrap" style="display: none;">
-      <table class="data-table">
-        <thead>
-          <tr><th>รูป</th><th>#</th><th>ประเภท</th><th>สภาพ</th><th>ราคา</th><th>สถานะ</th><th>แก้ไข</th></tr>
-        </thead>
-        <tbody id="items-body"></tbody>
-      </table>
-    </div>
-  </div>
-
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/components.js"></script>
@@ -67,14 +98,15 @@
     ;(async () => {
       await requireRole("admin")
       renderNav({ root: "../", dir: "admin", active: "a-items" })
-      load()
+      renderFooter({ root: "../", dir: "admin" })
+      await load()
+      initPage()
     })()
 
     const FURNITURE_LABEL = {
       sofa: "โซฟา", table: "โต๊ะ", chair: "เก้าอี้", bed: "เตียง",
       wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ", other: "อื่นๆ",
     }
-    const CONDITION_LABEL = { good: "ดี", fair: "พอใช้", poor: "ทรุดโทรม" }
     const STATUS_LABEL = {
       pending: "รอตรวจสอบ", assessed: "ประเมินแล้ว", scheduled: "นัดหมายแล้ว",
       picked_up: "รับของแล้ว", donated: "ส่งต่อสำเร็จ",
@@ -103,46 +135,71 @@
       emptyMsg.style.display = rows.length === 0 ? "block" : "none"
 
       tbody.innerHTML = rows.map((item) => `
-        <tr>
-          <td>${item.photo_url ? `<img class="item-photo" src="${item.photo_url}" />` : `<span class="item-photo-empty"></span>`}</td>
-          <td>#${item.id}</td>
+        <tr data-id="${item.id}">
+          <td>
+            ${item.photo_url
+              ? `<img class="item-thumb" src="${item.photo_url}" alt="รูป" />`
+              : `<span class="item-thumb-empty"><i data-lucide="image"></i></span>`
+            }
+          </td>
+          <td><strong>#${item.id}</strong></td>
           <td>${FURNITURE_LABEL[item.furniture_type] || item.furniture_type}</td>
-          <td>${CONDITION_LABEL[item.condition] || item.condition}</td>
-          <td>${item.estimated_price.toLocaleString()} บาท</td>
+          <td>${item.condition}</td>
+          <td><strong>฿${item.estimated_price.toLocaleString()} บาท</strong></td>
+          <td><span class="text-ok"><i data-lucide="leaf" style="width:12px;height:12px;vertical-align:middle;"></i> ${item.co2_saved_kg.toFixed(1)} กก.</span></td>
           <td><span class="badge ${STATUS_BADGE_CLASS[item.status] || "badge-muted"}">${STATUS_LABEL[item.status] || item.status}</span></td>
           <td>
-            <div class="edit-inline">
-              <select class="edit-type" data-id="${item.id}">
-                ${Object.entries(FURNITURE_LABEL).map(([v, l]) => `<option value="${v}" ${v === item.furniture_type ? "selected" : ""}>${l}</option>`).join("")}
+            <div style="display: flex; gap: 6px;">
+              <select class="inline-select edit-type" style="padding: 4px 6px;">
+                <option value="sofa" ${item.furniture_type === "sofa" ? "selected" : ""}>โซฟา</option>
+                <option value="table" ${item.furniture_type === "table" ? "selected" : ""}>โต๊ะ</option>
+                <option value="chair" ${item.furniture_type === "chair" ? "selected" : ""}>เก้าอี้</option>
+                <option value="bed" ${item.furniture_type === "bed" ? "selected" : ""}>เตียง</option>
+                <option value="wardrobe" ${item.furniture_type === "wardrobe" ? "selected" : ""}>ตู้เสื้อผ้า</option>
+                <option value="shelf" ${item.furniture_type === "shelf" ? "selected" : ""}>ชั้นวาง</option>
+                <option value="other" ${item.furniture_type === "other" ? "selected" : ""}>อื่นๆ</option>
               </select>
-              <select class="edit-condition" data-id="${item.id}">
-                ${Object.entries(CONDITION_LABEL).map(([v, l]) => `<option value="${v}" ${v === item.condition ? "selected" : ""}>${l}</option>`).join("")}
+              <select class="inline-select edit-cond" style="padding: 4px 6px;">
+                <option value="good" ${item.condition === "good" ? "selected" : ""}>ดี</option>
+                <option value="fair" ${item.condition === "fair" ? "selected" : ""}>พอใช้</option>
+                <option value="poor" ${item.condition === "poor" ? "selected" : ""}>ทรุดโทรม</option>
               </select>
-              <button class="btn btn-primary save-btn" data-id="${item.id}" style="padding:6px 12px; font-size:12px;">บันทึก</button>
+              <button class="btn btn-outline btn-sm save-btn"><i data-lucide="check"></i> บันทึก</button>
             </div>
           </td>
         </tr>
       `).join("")
 
-      tbody.querySelectorAll(".save-btn").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const id = Number(btn.dataset.id)
-          const row = btn.closest("tr")
-          const furniture_type = row.querySelector(".edit-type").value
-          const condition = row.querySelector(".edit-condition").value
-          btn.disabled = true
-          btn.textContent = "..."
+      tbody.querySelectorAll("tr").forEach((tr) => {
+        const id = Number(tr.dataset.id)
+        const saveBtn = tr.querySelector(".save-btn")
+        if (!saveBtn) return
+
+        saveBtn.addEventListener("click", async () => {
+          const type = tr.querySelector(".edit-type").value
+          const cond = tr.querySelector(".edit-cond").value
+          saveBtn.disabled = true
+          saveBtn.textContent = "..."
           try {
-            await updateItem(id, { furniture_type, condition })
-            toast("แก้ไขสำเร็จ ราคาคำนวณใหม่แล้ว", "success")
-            await load()
+            const updated = await updateItem(id, { furniture_type: type, condition: cond })
+            toast(`แก้ไขรายการ #${id} สำเร็จ ราคาใหม่: ฿${updated.estimated_price.toLocaleString()}`, "success")
+            const target = allItems.find((i) => i.id === id)
+            if (target) {
+              target.furniture_type = updated.furniture_type
+              target.condition = updated.condition
+              target.estimated_price = updated.estimated_price
+              target.co2_saved_kg = updated.co2_saved_kg
+            }
+            renderRows()
           } catch (err) {
-            toast(`บันทึกไม่สำเร็จ: ${err.message}`, "error")
-            btn.disabled = false
-            btn.textContent = "บันทึก"
+            toast(`แก้ไขไม่สำเร็จ: ${err.message}`, "error")
+            saveBtn.disabled = false
+            saveBtn.innerHTML = '<i data-lucide="check"></i> บันทึก'
           }
         })
       })
+
+      if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
     }
 
     statusSelect.addEventListener("change", renderRows)
@@ -157,7 +214,7 @@
       } catch (err) {
         loadingMsg.style.display = "none"
         errorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
-        errorMsg.style.display = "block"
+        errorMsg.style.display = "flex"
       }
     }
   </script>

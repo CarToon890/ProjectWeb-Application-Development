@@ -3,112 +3,143 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ผลประเมิน — The Disposal Guilt</title>
+  <title>ผลการประเมินราคา — The Disposal Guilt</title>
   <link rel="stylesheet" href="../css/main.css" />
   <style>
-    .page-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 24px;
-    }
-
     .result-photo {
       width: 100%;
-      height: 180px;
+      height: 220px;
       object-fit: cover;
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-lg);
       background: var(--bg);
-      margin-bottom: 20px;
+      margin-bottom: var(--sp-5);
+      border: 1px solid var(--border);
     }
     .result-photo-empty {
       width: 100%;
-      height: 120px;
-      border-radius: var(--radius-sm);
-      background: var(--bg);
-      border: 1px dashed var(--border);
+      height: 140px;
+      border-radius: var(--radius-lg);
+      background: var(--surface-2);
+      border: 2px dashed var(--border);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 6px;
       font-size: 13px;
-      color: var(--muted-2);
-      margin-bottom: 20px;
-    }
-
-    .price-hero { text-align: center; margin-bottom: 8px; }
-    .price-hero .value { font-size: 34px; font-weight: 700; color: var(--ok); }
-    .price-hero .label { font-size: 13px; color: var(--muted); }
-
-    .price-breakdown {
-      background: var(--bg);
-      border-radius: var(--radius-sm);
-      padding: 10px 14px;
-      font-size: 12px;
       color: var(--muted);
-      text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: var(--sp-5);
     }
+    .result-photo-empty svg { width: 28px; height: 28px; color: var(--muted-2); }
 
+    .price-hero-card {
+      background: linear-gradient(135deg, var(--ok-bg) 0%, rgba(59, 130, 246, 0.05) 100%);
+      border: 1px solid var(--ok-border);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-6);
+      text-align: center;
+      margin-bottom: var(--sp-5);
+    }
+    .price-hero-card .value { font-size: 38px; font-weight: 800; color: var(--ok); line-height: 1.1; }
+    .price-hero-card .label { font-size: 13px; color: var(--ok-ink); font-weight: 600; margin-top: 4px; }
+
+    .detail-list {
+      background: var(--surface-2);
+      border-radius: var(--radius-md);
+      padding: var(--sp-4) var(--sp-5);
+      border: 1px solid var(--border);
+      margin-bottom: var(--sp-6);
+    }
     .detail-row {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       font-size: 13px;
-      padding: 6px 0;
+      padding: var(--sp-2) 0;
       border-bottom: 1px solid var(--border-light);
     }
     .detail-row:last-child { border-bottom: none; }
     .detail-row .label { color: var(--muted); }
-    .detail-row .value { font-weight: 500; }
+    .detail-row .val { font-weight: 600; color: var(--ink); }
 
-    .co2-note {
-      text-align: center;
+    .eco-banner {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--sp-3) var(--sp-4);
       font-size: 13px;
-      color: var(--muted);
-      margin: 16px 0 20px;
+      color: var(--ok-ink);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      margin-bottom: var(--sp-6);
     }
-    .co2-note strong { color: var(--ok); }
-
-    .action-row { display: flex; flex-direction: column; gap: 10px; }
+    .eco-banner svg { width: 18px; height: 18px; color: var(--ok); flex-shrink: 0; }
   </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
-  <div class="page-wrap">
-    <div class="auth-card" id="card">
-      <div class="logo-standalone">THE DISPOSAL GUILT</div>
-      <h1>ผลการประเมิน</h1>
-      <p class="subtitle">นี่คือราคาและผลลัพธ์ที่คุณจะได้จากการส่งต่อของเก่าชิ้นนี้</p>
+  <main class="main-content">
+    <div class="container-md">
+      <div id="app-stepper"></div>
 
-      <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
-      <div class="msg msg-error" id="error-msg"></div>
+      <div class="card card-static" style="padding: var(--sp-8);">
+        <div id="loading-msg" class="empty-state">กำลังประมวลผลข้อมูล...</div>
+        <div class="msg msg-error" id="error-msg"></div>
 
-      <div id="content" style="display: none;">
-        <img class="result-photo" id="result-photo" style="display: none;" />
-        <div class="result-photo-empty" id="result-photo-empty">ไม่มีรูปประกอบ</div>
+        <div id="result-content" style="display: none;">
+          <div style="text-align: center; margin-bottom: var(--sp-6);">
+            <span class="badge badge-ok mb-sm"><i data-lucide="check-circle"></i> ประเมินราคาสำเร็จ</span>
+            <h2>ส่วนลด Trade-in ของคุณพร้อมใช้งาน</h2>
+            <p class="subtitle" style="margin-bottom: 0;">นำมูลค่านี้ไปเป็นส่วนลดในการเลือกซื้อเฟอร์นิเจอร์ชิ้นใหม่ได้ทันที</p>
+          </div>
 
-        <div class="price-hero">
-          <div class="value" id="price-value">-</div>
-          <div class="label">ราคาประเมิน (ส่วนลดที่คุณจะได้รับ)</div>
-        </div>
-        <div class="price-breakdown" id="price-breakdown"></div>
+          <div id="photo-container"></div>
 
-        <div class="detail-row"><span class="label">ประเภท</span><span class="value" id="detail-type">-</span></div>
-        <div class="detail-row"><span class="label">สภาพ</span><span class="value" id="detail-condition">-</span></div>
-        <div class="detail-row" id="detail-desc-row" style="display: none;">
-          <span class="label">รายละเอียด</span><span class="value" id="detail-desc">-</span>
-        </div>
+          <div class="price-hero-card">
+            <div class="label">มูลค่าประเมิน (คูปองส่วนลด):</div>
+            <div class="value" id="price-value">-</div>
+            <div id="breakdown-text" style="font-size: 12px; color: var(--muted); margin-top: 6px;"></div>
+          </div>
 
-        <div class="co2-note">ช่วยลด CO₂ ได้ <strong id="detail-co2">-</strong> กก. จากการไม่ทิ้งของชิ้นนี้ลงบ่อขยะ</div>
+          <div class="eco-banner" id="co2-text"></div>
 
-        <div class="action-row">
-          <button class="btn btn-primary btn-block" id="go-products-btn" style="margin-top: 0;">เลือกของใหม่เลย</button>
-          <button class="btn btn-outline btn-block" id="go-again-btn" style="margin-top: 0;">ประเมินชิ้นอื่นอีก</button>
+          <div class="detail-list">
+            <div class="detail-row">
+              <span class="label">รหัสรายการ</span>
+              <span class="val" id="item-id">-</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">ประเภทเฟอร์นิเจอร์</span>
+              <span class="val" id="furniture-type">-</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">ระดับสภาพ</span>
+              <span class="val" id="condition">-</span>
+            </div>
+            <div class="detail-row" id="desc-row" style="display: none;">
+              <span class="label">รายละเอียด</span>
+              <span class="val" id="description" style="max-width: 60%; text-align: right;">-</span>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: var(--sp-3);">
+            <button class="btn btn-primary btn-block btn-lg" id="choose-product-btn">
+              <i data-lucide="shopping-bag"></i> ไปเลือกของใหม่ (รับส่วนลดชิ้นนี้)
+            </button>
+            <a href="assessment-form.html" class="btn btn-outline btn-block">
+              <i data-lucide="rotate-ccw"></i> ประเมินเฟอร์นิเจอร์ชิ้นอื่นอีก
+            </a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </main>
 
+  <div id="app-footer"></div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/components.js"></script>
@@ -116,79 +147,82 @@
   <script>
     requireLogin()
     renderNav({ root: "../", active: "assess" })
+    renderStepper(1)
+    renderFooter({ root: "../", dir: "pages" })
 
     const FURNITURE_LABEL = {
       sofa: "โซฟา", table: "โต๊ะ", chair: "เก้าอี้", bed: "เตียง",
       wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ", other: "อื่นๆ",
     }
-    const CONDITION_LABEL = { good: "ดี", fair: "พอใช้", poor: "ทรุดโทรม" }
-
-    // สูตรเดียวกับฝั่ง backend (items.py) — ใช้แค่อธิบายที่มาของราคาให้ผู้ใช้เห็น ไม่ได้คำนวณจริง
+    const CONDITION_LABEL = { good: "ดี (50%)", fair: "พอใช้ (30%)", poor: "ทรุดโทรม (10%)" }
     const BASE_PRICE = { sofa: 3000, bed: 2500, wardrobe: 2000, table: 1500, chair: 800, shelf: 1000, other: 500 }
-    const CONDITION_MULT = { good: 0.5, fair: 0.3, poor: 0.1 }
+    const CONDITION_MULT_TEXT = { good: "× 0.5", fair: "× 0.3", poor: "× 0.1" }
 
-    const itemId = new URLSearchParams(location.search).get("id")
+    const params = new URLSearchParams(location.search)
+    const itemId = params.get("id")
 
     const loadingMsg = document.getElementById("loading-msg")
     const errorMsg = document.getElementById("error-msg")
-    const content = document.getElementById("content")
+    const resultContent = document.getElementById("result-content")
 
-    async function load() {
-      if (!itemId) {
-        loadingMsg.style.display = "none"
-        errorMsg.textContent = "ไม่พบรหัสรายการ กรุณาประเมินของเก่าใหม่อีกครั้ง"
-        errorMsg.style.display = "block"
-        return
-      }
-
-      let item
-      try {
-        item = await getItem(itemId)
-      } catch (err) {
-        loadingMsg.style.display = "none"
-        errorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
-        errorMsg.style.display = "block"
-        return
-      }
-
+    if (!itemId) {
       loadingMsg.style.display = "none"
-      content.style.display = "block"
+      errorMsg.textContent = "ไม่พบรหัสรายการ กรุณากลับไปส่งประเมินใหม่"
+      errorMsg.style.display = "flex"
+    } else {
+      getItem(itemId)
+        .then((item) => {
+          loadingMsg.style.display = "none"
 
-      if (item.photo_url) {
-        const photo = document.getElementById("result-photo")
-        photo.src = item.photo_url
-        photo.style.display = "block"
-        document.getElementById("result-photo-empty").style.display = "none"
-      }
+          const photoContainer = document.getElementById("photo-container")
+          if (item.photo_url) {
+            photoContainer.innerHTML = `<img class="result-photo" src="${item.photo_url}" alt="รูปเฟอร์นิเจอร์" />`
+          } else {
+            photoContainer.innerHTML = `
+              <div class="result-photo-empty">
+                <i data-lucide="image"></i>
+                <span>ไม่มีรูปถ่ายแนบมา</span>
+              </div>
+            `
+          }
 
-      document.getElementById("price-value").textContent = `${item.estimated_price.toLocaleString()} บาท`
-      document.getElementById("detail-type").textContent = FURNITURE_LABEL[item.furniture_type] || item.furniture_type
-      document.getElementById("detail-condition").textContent = CONDITION_LABEL[item.condition] || item.condition
-      document.getElementById("detail-co2").textContent = item.co2_saved_kg.toFixed(1)
+          document.getElementById("price-value").textContent = `${item.estimated_price.toLocaleString()} บาท`
 
-      const base = BASE_PRICE[item.furniture_type]
-      const mult = CONDITION_MULT[item.condition]
-      if (base !== undefined && mult !== undefined) {
-        document.getElementById("price-breakdown").textContent =
-          `ราคาฐาน ${base.toLocaleString()} บาท × ตัวคูณสภาพ ${Math.round(mult * 100)}% = ${item.estimated_price.toLocaleString()} บาท`
-      }
+          const base = BASE_PRICE[item.furniture_type] || 0
+          const multText = CONDITION_MULT_TEXT[item.condition] || ""
+          document.getElementById("breakdown-text").textContent =
+            `คำนวณจากราคาฐาน ${base.toLocaleString()} บาท ${multText} ตามสภาพสินค้า`
 
-      if (item.description) {
-        document.getElementById("detail-desc").textContent = item.description
-        document.getElementById("detail-desc-row").style.display = "flex"
-      }
+          document.getElementById("co2-text").innerHTML = `
+            <i data-lucide="leaf"></i>
+            <span>ช่วยลดการปล่อย CO₂ ได้ <strong>${item.co2_saved_kg.toFixed(1)} กก.</strong> เมื่อเข้าสู่ระบบ Trade-in</span>
+          `
 
-      document.getElementById("go-products-btn").addEventListener("click", () => {
-        setFlow({ item_id: item.id })
-        location.href = `products.html?item_id=${item.id}`
-      })
+          document.getElementById("item-id").textContent = `#${item.id}`
+          document.getElementById("furniture-type").textContent = FURNITURE_LABEL[item.furniture_type] || item.furniture_type
+          document.getElementById("condition").textContent = CONDITION_LABEL[item.condition] || item.condition
+
+          if (item.description) {
+            document.getElementById("description").textContent = item.description
+            document.getElementById("desc-row").style.display = "flex"
+          }
+
+          document.getElementById("choose-product-btn").addEventListener("click", () => {
+            setFlow({ item_id: item.id })
+            location.href = `products.html?item_id=${item.id}`
+          })
+
+          resultContent.style.display = "block"
+          if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
+        })
+        .catch((err) => {
+          loadingMsg.style.display = "none"
+          errorMsg.textContent = `โหลดผลประเมินไม่สำเร็จ: ${err.message}`
+          errorMsg.style.display = "flex"
+        })
     }
 
-    document.getElementById("go-again-btn").addEventListener("click", () => {
-      location.href = "assessment-form.html"
-    })
-
-    load()
+    initPage()
   </script>
 </body>
 </html>

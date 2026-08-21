@@ -6,46 +6,87 @@
   <title>งานของฉัน — The Disposal Guilt</title>
   <link rel="stylesheet" href="../css/main.css" />
   <style>
-    /* mobile-first: คอลัมน์เดียวเสมอ ปุ่ม/พื้นที่แตะใหญ่พอสำหรับใช้งานหน้างาน */
-    .container-staff { max-width: 560px; margin: 0 auto; padding: 20px 16px 40px; }
-
-    .section-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin: 24px 0 10px;
+    .job-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-5);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: var(--sp-4);
+      border-left: 4px solid var(--accent);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
     }
-    .section-title:first-of-type { margin-top: 8px; }
+    .job-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .job-card.today { border-left-color: var(--ok); }
+    .job-card.completed { border-left-color: var(--muted-2); opacity: 0.85; }
 
-    .job-card { margin-bottom: 12px; }
-    .job-time { font-size: 20px; font-weight: 700; }
-    .job-day { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .job-time-badge {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--sp-3);
+      padding-bottom: var(--sp-2);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .job-time { font-size: 20px; font-weight: 800; color: var(--ink); }
 
-    .job-row { display: flex; gap: 8px; font-size: 14px; padding: 6px 0; border-bottom: 1px solid var(--border-light); }
+    .job-row {
+      display: flex;
+      gap: var(--sp-2);
+      font-size: 13px;
+      padding: var(--sp-2) 0;
+      border-bottom: 1px solid var(--border-light);
+      align-items: flex-start;
+    }
     .job-row:last-of-type { border-bottom: none; }
-    .job-row .icon { flex-shrink: 0; width: 20px; text-align: center; }
-    .job-row .text { flex: 1; }
+    .job-row .icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-xs);
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+    .job-row .icon svg { width: 14px; height: 14px; }
+    .job-row .text { flex: 1; color: var(--ink); }
 
-    .job-actions { display: flex; gap: 8px; margin-top: 14px; }
-    .job-actions .btn { flex: 1; padding: 12px; font-size: 14px; }
+    .job-actions {
+      display: flex;
+      gap: var(--sp-2);
+      margin-top: var(--sp-4);
+    }
+    .job-actions .btn { flex: 1; padding: 10px; font-size: 13px; }
   </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
-  <div class="container-staff">
-    <h1>งานของฉัน</h1>
-    <p class="subtitle">รายการนัดหมายที่ต้องไปรับของเก่าและส่งของใหม่</p>
+  <main class="main-content">
+    <div class="container-md">
+      <div class="page-header">
+        <div class="page-header-main">
+          <h1><i data-lucide="briefcase" style="vertical-align: middle; color: var(--accent); margin-right: 8px;"></i>ตารางงานของฉัน</h1>
+          <p class="subtitle" style="margin-bottom: 0;">รายการนัดหมายเข้ารับของเก่าและส่งมอบสินค้าใหม่</p>
+        </div>
+      </div>
 
-    <div id="loading-msg" class="empty-state">กำลังโหลดข้อมูล...</div>
-    <div class="msg msg-error" id="error-msg"></div>
-    <div class="empty-state" id="empty-msg" style="display: none;">ยังไม่มีงานที่ได้รับมอบหมาย</div>
+      <div id="loading-msg" class="empty-state">กำลังดึงรายการงานของคุณ...</div>
+      <div class="msg msg-error" id="error-msg"></div>
+      <div class="empty-state" id="empty-msg" style="display: none;">
+        <i data-lucide="check-circle" style="color: var(--ok);"></i>
+        <div>ไม่มีงานค้างในขณะนี้ พักผ่อนได้เต็มที่!</div>
+      </div>
 
-    <div id="job-sections"></div>
-  </div>
+      <div id="job-sections"></div>
+    </div>
+  </main>
 
+  <div id="app-footer"></div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/components.js"></script>
@@ -53,7 +94,9 @@
     ;(async () => {
       await requireRole(["staff", "admin"])
       renderNav({ root: "../", dir: "staff", active: "jobs" })
-      load()
+      renderFooter({ root: "../", dir: "staff" })
+      await load()
+      initPage()
     })()
 
     const FURNITURE_LABEL = {
@@ -61,81 +104,134 @@
       wardrobe: "ตู้เสื้อผ้า", shelf: "ชั้นวางของ", other: "อื่นๆ",
     }
 
+    const STATUS_LABEL = {
+      pending: "รอยืนยัน", confirmed: "ยืนยันแล้ว",
+      in_transit: "กำลังเดินทาง/ขนส่ง", completed: "เสร็จสิ้นแล้ว", cancelled: "ยกเลิก",
+    }
+    const STATUS_BADGE_CLASS = {
+      pending: "badge-warning", confirmed: "badge-accent",
+      in_transit: "badge-ok", completed: "badge-muted", cancelled: "badge-danger",
+    }
+
     const loadingMsg = document.getElementById("loading-msg")
     const errorMsg = document.getElementById("error-msg")
     const emptyMsg = document.getElementById("empty-msg")
-    const sectionsWrap = document.getElementById("job-sections")
+    const sectionsContainer = document.getElementById("job-sections")
 
-    function formatTime(dt) {
-      return new Date(dt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })
-    }
-    function formatDay(dt) {
-      return new Date(dt).toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "short" })
-    }
-    function isSameDay(a, b) {
-      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+    function formatDay(dateStr) {
+      const d = new Date(dateStr)
+      return d.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
     }
 
-    function renderJobCard(job) {
+    function formatTime(dateStr) {
+      const d = new Date(dateStr)
+      return d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) + " น."
+    }
+
+    function buildJobCard(job, isToday) {
       const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address)}`
-      const card = document.createElement("div")
-      card.className = "card job-card"
-      card.innerHTML = `
-        <div class="job-time">${formatTime(job.timeslot.datetime)}</div>
-        <div class="job-day">${formatDay(job.timeslot.datetime)}</div>
-        <div class="job-row"><span class="icon">👤</span><span class="text">${job.user.full_name} · ${job.user.phone || "ไม่มีเบอร์โทร"}</span></div>
-        <div class="job-row"><span class="icon">📍</span><span class="text">${job.address}</span></div>
-        <div class="job-row"><span class="icon">📦</span><span class="text">รับ: ${FURNITURE_LABEL[job.item.furniture_type] || job.item.furniture_type} (${job.item.condition})</span></div>
-        <div class="job-row"><span class="icon">🚚</span><span class="text">ส่ง: ${job.product ? job.product.name : "ไม่มี (คืนส่วนลดอย่างเดียว)"}</span></div>
-        <div class="job-actions">
-          <a class="btn btn-outline" href="${mapsUrl}" target="_blank" rel="noopener" style="text-align:center; text-decoration:none;">เปิดแผนที่</a>
-          <button class="btn btn-primary open-checklist-btn">เปิด Checklist</button>
+      const isCompleted = job.status === "completed" || job.status === "cancelled"
+      const statusBadge = `<span class="badge ${STATUS_BADGE_CLASS[job.status] || "badge-muted"}">${STATUS_LABEL[job.status] || job.status}</span>`
+
+      return `
+        <div class="job-card ${isToday ? "today" : ""} ${isCompleted ? "completed" : ""}">
+          <div class="job-time-badge">
+            <div>
+              <span class="job-time">${formatTime(job.timeslot.datetime)}</span>
+              <span style="font-size:12px; color:var(--muted); margin-left:8px;">#${job.id}</span>
+            </div>
+            ${statusBadge}
+          </div>
+
+          <div class="job-row">
+            <span class="icon"><i data-lucide="user"></i></span>
+            <span class="text"><strong>${job.user.full_name}</strong> (โทร: <a href="tel:${job.user.phone}" style="color:var(--accent); font-weight:600;">${job.user.phone || "ไม่ระบุ"}</a>)</span>
+          </div>
+
+          <div class="job-row">
+            <span class="icon"><i data-lucide="map-pin"></i></span>
+            <span class="text">${job.address}</span>
+          </div>
+
+          <div class="job-row">
+            <span class="icon" style="color:var(--accent);"><i data-lucide="package"></i></span>
+            <span class="text"><strong>รับของเก่า:</strong> ${FURNITURE_LABEL[job.item.furniture_type] || job.item.furniture_type} (${job.item.condition})</span>
+          </div>
+
+          <div class="job-row">
+            <span class="icon" style="color:var(--ok);"><i data-lucide="truck"></i></span>
+            <span class="text"><strong>ส่งของใหม่:</strong> ${job.product ? job.product.name : "ไม่มี (คืนเงินส่วนลดอย่างเดียว)"}</span>
+          </div>
+
+          <div class="job-actions">
+            <a href="${mapsUrl}" target="_blank" rel="noopener" class="btn btn-outline">
+              <i data-lucide="map"></i> นำทางแผนที่
+            </a>
+            ${!isCompleted ? `
+              <a href="checklist.html?booking_id=${job.id}" class="btn btn-primary">
+                <i data-lucide="clipboard-check"></i> ตรวจสอบงาน & เช็คลิสต์
+              </a>
+            ` : `
+              <a href="checklist.html?booking_id=${job.id}" class="btn btn-ghost">
+                <i data-lucide="file-text"></i> ดูผลการตรวจ
+              </a>
+            `}
+          </div>
         </div>
       `
-      card.querySelector(".open-checklist-btn").addEventListener("click", () => {
-        location.href = `checklist.html?id=${job.id}`
-      })
-      return card
     }
 
     async function load() {
-      let jobs
       try {
-        jobs = await getStaffJobs()
+        const jobs = await getStaffJobs()
+        loadingMsg.style.display = "none"
+
+        if (jobs.length === 0) {
+          emptyMsg.style.display = "block"
+          return
+        }
+
+        const now = new Date()
+        const todayStr = now.toISOString().slice(0, 10)
+
+        const todayJobs = []
+        const upcomingJobs = []
+        const pastJobs = []
+
+        jobs.forEach((j) => {
+          const dayStr = j.timeslot.datetime.slice(0, 10)
+          if (dayStr === todayStr) {
+            todayJobs.push(j)
+          } else if (new Date(j.timeslot.datetime) > now) {
+            upcomingJobs.push(j)
+          } else {
+            pastJobs.push(j)
+          }
+        })
+
+        let html = ""
+
+        if (todayJobs.length > 0) {
+          html += `<div class="section-title" style="color:var(--ok);"><i data-lucide="clock" style="vertical-align:middle; width:16px; height:16px;"></i> งานวันนี้ (${formatDay(now.toISOString())})</div>`
+          html += todayJobs.map((j) => buildJobCard(j, true)).join("")
+        }
+
+        if (upcomingJobs.length > 0) {
+          html += `<div class="section-title"><i data-lucide="calendar" style="vertical-align:middle; width:16px; height:16px;"></i> งานที่กำลังจะมาถึง</div>`
+          html += upcomingJobs.map((j) => buildJobCard(j, false)).join("")
+        }
+
+        if (pastJobs.length > 0) {
+          html += `<div class="section-title"><i data-lucide="archive" style="vertical-align:middle; width:16px; height:16px;"></i> ประวัติงานที่ผ่านมา</div>`
+          html += pastJobs.map((j) => buildJobCard(j, false)).join("")
+        }
+
+        sectionsContainer.innerHTML = html
+        if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
       } catch (err) {
         loadingMsg.style.display = "none"
-        errorMsg.textContent = `โหลดข้อมูลไม่สำเร็จ: ${err.message}`
-        errorMsg.style.display = "block"
-        return
-      }
-
-      loadingMsg.style.display = "none"
-
-      if (jobs.length === 0) {
-        emptyMsg.style.display = "block"
-        return
-      }
-
-      jobs.sort((a, b) => new Date(a.timeslot.datetime) - new Date(b.timeslot.datetime))
-
-      const now = new Date()
-      const done = jobs.filter((j) => j.status === "completed")
-      const today = jobs.filter((j) => j.status !== "completed" && isSameDay(new Date(j.timeslot.datetime), now))
-      const upcoming = jobs.filter((j) => j.status !== "completed" && !isSameDay(new Date(j.timeslot.datetime), now))
-
-      sectionsWrap.innerHTML = ""
-      const sections = [
-        ["วันนี้", today],
-        ["กำลังจะถึง", upcoming],
-        ["เสร็จแล้ว", done],
-      ]
-      for (const [label, list] of sections) {
-        if (list.length === 0) continue
-        const title = document.createElement("div")
-        title.className = "section-title"
-        title.textContent = `${label} (${list.length})`
-        sectionsWrap.appendChild(title)
-        list.forEach((job) => sectionsWrap.appendChild(renderJobCard(job)))
+        errorMsg.textContent = `โหลดข้อมูลงานไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = "flex"
       }
     }
   </script>

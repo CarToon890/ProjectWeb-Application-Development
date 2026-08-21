@@ -3,163 +3,236 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>นัดวัน-เวลา — The Disposal Guilt</title>
+  <title>ขั้นตอนที่ 3: เลือกวัน-เวลานัดหมาย — The Disposal Guilt</title>
   <link rel="stylesheet" href="../css/main.css" />
   <style>
-    .day-group { margin-bottom: 18px; }
-    .day-label { font-size: 13px; font-weight: 600; color: #3a3a3a; margin-bottom: 8px; }
+    .day-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-5);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: var(--sp-4);
+    }
+    .day-header {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--sp-3);
+      padding-bottom: var(--sp-2);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .day-header svg { width: 18px; height: 18px; color: var(--accent); }
 
     .slot-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: var(--sp-3);
     }
 
     .slot-btn {
-      padding: 10px 8px;
+      padding: var(--sp-3) var(--sp-2);
       border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: var(--surface);
+      border-radius: var(--radius-md);
+      background: var(--surface-2);
       font-size: 13px;
       cursor: pointer;
       text-align: center;
       font-family: inherit;
-      transition: all 0.15s;
+      transition: all var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      color: var(--ink);
     }
-    .slot-btn .tech { display: block; font-size: 11px; color: var(--muted-2); margin-top: 2px; }
-    .slot-btn:hover { border-color: var(--accent); }
-    .slot-btn.selected { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-ink); font-weight: 500; }
+    .slot-btn .time { font-size: 15px; font-weight: 700; color: var(--ink); }
+    .slot-btn .tech { font-size: 11px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
+    .slot-btn:hover { border-color: var(--accent); background: var(--accent-bg); }
+    .slot-btn.selected {
+      border-color: var(--accent);
+      background: var(--accent-bg);
+      color: var(--accent-ink);
+      box-shadow: 0 0 0 2px var(--accent-border);
+    }
+    .slot-btn.selected .time { color: var(--accent-ink); }
     .slot-btn:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
 
-    #empty-msg { display: none; text-align: center; padding: 14px; }
+    .notice-card {
+      background: linear-gradient(135deg, var(--accent-bg) 0%, rgba(5, 150, 105, 0.08) 100%);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-4) var(--sp-5);
+      margin-bottom: var(--sp-6);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+    }
+    .notice-card svg { width: 24px; height: 24px; color: var(--accent); flex-shrink: 0; }
   </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
-  <div class="container container-md">
-    <h1>เลือกวัน-เวลานัดหมาย</h1>
-    <p class="subtitle">รอบเดียวจบ: ช่างจะมารับของเก่าและส่งของใหม่พร้อมกันในนัดหมายเดียว</p>
+  <main class="main-content">
+    <div class="container-md">
+      <!-- Stepper Wizard -->
+      <div id="app-stepper"></div>
 
-    <div class="card">
-      <div class="empty-state" id="loading-msg">กำลังโหลดช่วงเวลา...</div>
+      <div class="notice-card">
+        <i data-lucide="truck"></i>
+        <div>
+          <strong style="display: block; font-size: 14px; color: var(--accent-ink);">รับจบในรอบเดียว: ส่งของใหม่ + ขนของเก่าออกให้</strong>
+          <span style="font-size: 12px; color: var(--muted);">ทีมช่างจะนำสินค้าใหม่ไปส่ง พร้อมตรวจรับและขนย้ายของเก่ากลับในรอบเวลาเดียวกัน</span>
+        </div>
+      </div>
+
+      <div class="page-header" style="margin-bottom: var(--sp-5);">
+        <div class="page-header-main">
+          <h1>เลือกรอบวัน-เวลานัดหมาย</h1>
+          <p class="subtitle" style="margin-bottom: 0;">เลือกรอบเวลาที่สะดวกเพื่อให้ทีมช่างเข้าให้บริการ</p>
+        </div>
+      </div>
+
+      <div id="loading-msg" class="empty-state">กำลังค้นหารอบเวลาที่ว่าง...</div>
       <div id="slots-wrap"></div>
-      <div class="msg-empty" id="empty-msg">ไม่มีช่วงเวลาว่างในตอนนี้ ลองกลับมาดูใหม่ภายหลัง</div>
+      <div class="empty-state" id="empty-msg" style="display: none;">
+        <i data-lucide="calendar-x"></i>
+        <div>ไม่มีช่วงเวลาว่างในขณะนี้ กรุณากลับมาตรวจสอบใหม่อีกครั้ง</div>
+      </div>
+
+      <div class="msg msg-error" id="error-msg"></div>
+
+      <div style="margin-top: var(--sp-6);">
+        <button class="btn btn-primary btn-block btn-lg" id="next-btn" disabled>
+          <i data-lucide="arrow-right"></i> ถัดไป: ตรวจสอบและยืนยันการจอง (ขั้นตอนที่ 4)
+        </button>
+      </div>
     </div>
+  </main>
 
-    <div class="msg msg-error" id="error-msg"></div>
-    <button class="btn btn-primary btn-block" id="next-btn" disabled>ถัดไป: สรุปก่อนยืนยัน</button>
-  </div>
+  <div id="app-footer"></div>
 
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/components.js"></script>
   <script src="../js/flow.js"></script>
   <script>
     requireLogin()
-    renderNav({ root: "../", active: "" })
+    renderNav({ root: "../", active: "assess" })
+    renderStepper(3)
+    renderFooter({ root: "../", dir: "pages" })
 
     const params = new URLSearchParams(location.search)
-    const flow = getFlow()
-    const itemId = params.get('item_id') || flow.item_id
-    const productId = params.get('product_id') || flow.product_id
+    const itemId = params.get('item_id') || getFlow().item_id
+    const productId = params.get('product_id') || getFlow().product_id
 
-    const slotsWrap = document.getElementById('slots-wrap')
-    const emptyMsg = document.getElementById('empty-msg')
     const loadingMsg = document.getElementById('loading-msg')
-    const nextBtn = document.getElementById('next-btn')
+    const emptyMsg = document.getElementById('empty-msg')
     const errorMsg = document.getElementById('error-msg')
+    const slotsWrap = document.getElementById('slots-wrap')
+    const nextBtn = document.getElementById('next-btn')
 
-    let selectedSlotId = null
+    let selectedTimeslotId = null
 
-    function formatSlot(dt) {
-      const d = new Date(dt)
-      return {
-        day: d.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' }),
-        time: d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-      }
+    function formatDayHeader(dateStr) {
+      const d = new Date(dateStr)
+      return d.toLocaleDateString('th-TH', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
     }
 
-    function selectSlot(id, btn) {
-      selectedSlotId = id
-      document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'))
-      btn.classList.add('selected')
-      nextBtn.disabled = false
+    function formatTime(dateStr) {
+      const d = new Date(dateStr)
+      return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.'
     }
 
-    async function loadSlots() {
-      errorMsg.style.display = 'none'
-      emptyMsg.style.display = 'none'
-      loadingMsg.style.display = 'block'
-      slotsWrap.innerHTML = ''
-      selectedSlotId = null
-      nextBtn.disabled = true
-
-      let slots
-      try {
-        slots = await getTimeslots()
-      } catch (err) {
-        errorMsg.textContent = `โหลดช่วงเวลาไม่สำเร็จ: ${err.message}`
-        errorMsg.style.display = 'block'
-        return
-      } finally {
-        loadingMsg.style.display = 'none'
-      }
-
-      // กันเวลาที่ผ่านไปแล้วอีกชั้นฝั่ง frontend เผื่อ clock ไม่ตรงกัน
-      const now = new Date()
-      slots = slots.filter(s => new Date(s.datetime) > now)
-
-      if (slots.length === 0) {
-        emptyMsg.style.display = 'block'
-        return
-      }
-      emptyMsg.style.display = 'none'
-
-      const byDay = {}
+    function groupByDay(slots) {
+      const groups = {}
       for (const slot of slots) {
-        const { day } = formatSlot(slot.datetime)
-        byDay[day] = byDay[day] || []
-        byDay[day].push(slot)
+        const key = slot.datetime.slice(0, 10)
+        if (!groups[key]) groups[key] = []
+        groups[key].push(slot)
       }
+      return groups
+    }
 
-      for (const [day, daySlots] of Object.entries(byDay)) {
-        const group = document.createElement('div')
-        group.className = 'day-group'
-        group.innerHTML = `<div class="day-label">${day}</div>`
-        const grid = document.createElement('div')
-        grid.className = 'slot-grid'
+    async function loadTimeslots() {
+      try {
+        const slots = await getTimeslots()
+        loadingMsg.style.display = 'none'
 
-        for (const slot of daySlots) {
-          const { time } = formatSlot(slot.datetime)
-          const btn = document.createElement('button')
-          btn.type = 'button'
-          btn.className = 'slot-btn'
-          btn.innerHTML = `${time}<span class="tech">${slot.technician_name}</span>`
-          btn.addEventListener('click', () => selectSlot(slot.id, btn))
-          grid.appendChild(btn)
+        if (slots.length === 0) {
+          emptyMsg.style.display = 'block'
+          return
         }
-        group.appendChild(grid)
-        slotsWrap.appendChild(group)
+
+        const groups = groupByDay(slots)
+        slotsWrap.innerHTML = ''
+
+        for (const [dayKey, daySlots] of Object.entries(groups)) {
+          const card = document.createElement('div')
+          card.className = 'day-card'
+
+          const header = document.createElement('div')
+          header.className = 'day-header'
+          header.innerHTML = `<i data-lucide="calendar"></i> <span>${formatDayHeader(daySlots[0].datetime)}</span>`
+          card.appendChild(header)
+
+          const grid = document.createElement('div')
+          grid.className = 'slot-grid'
+
+          for (const slot of daySlots) {
+            const btn = document.createElement('button')
+            btn.className = 'slot-btn'
+            btn.innerHTML = `
+              <span class="time">${formatTime(slot.datetime)}</span>
+              <span class="tech"><i data-lucide="user" style="width:12px;height:12px;"></i> ${slot.technician_name}</span>
+            `
+            btn.addEventListener('click', () => {
+              document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'))
+              btn.classList.add('selected')
+              selectedTimeslotId = slot.id
+              nextBtn.disabled = false
+            })
+            grid.appendChild(btn)
+          }
+
+          card.appendChild(grid)
+          slotsWrap.appendChild(card)
+        }
+
+        if (typeof lucide !== 'undefined') lucide.createIcons({ nameAttr: 'data-lucide' })
+      } catch (err) {
+        loadingMsg.style.display = 'none'
+        errorMsg.textContent = `โหลดรอบเวลาไม่สำเร็จ: ${err.message}`
+        errorMsg.style.display = 'flex'
       }
     }
 
     nextBtn.addEventListener('click', () => {
-      errorMsg.style.display = 'none'
-
-      if (!itemId) {
-        errorMsg.textContent = 'ไม่พบรายการของเก่า กรุณากลับไปประเมินของเก่าใหม่'
-        errorMsg.style.display = 'block'
-        return
-      }
-      if (!selectedSlotId) return
-
-      setFlow({ item_id: Number(itemId), product_id: productId ? Number(productId) : null, timeslot_id: selectedSlotId })
-      const productParam = productId ? `&product_id=${productId}` : ''
-      location.href = `checkout.html?item_id=${itemId}${productParam}&timeslot_id=${selectedSlotId}`
+      if (!selectedTimeslotId) return
+      setFlow({
+        item_id: itemId ? Number(itemId) : undefined,
+        product_id: productId ? Number(productId) : undefined,
+        timeslot_id: selectedTimeslotId,
+      })
+      const q = new URLSearchParams()
+      if (itemId) q.set('item_id', itemId)
+      if (productId) q.set('product_id', productId)
+      q.set('timeslot_id', selectedTimeslotId)
+      location.href = `checkout.html?${q.toString()}`
     })
 
-    loadSlots()
+    loadTimeslots()
+    initPage()
   </script>
 </body>
 </html>
