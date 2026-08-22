@@ -141,6 +141,10 @@ async function getTimeslots() {
   return apiFetch("/api/timeslots")
 }
 
+async function getTimeslot(id) {
+  return apiFetch(`/api/timeslots/${id}`)
+}
+
 // รวมรอบเวลาทั้งหมด (แอดมินเท่านั้น) ต่างจาก getTimeslots() ที่ให้แค่รอบว่างในอนาคต
 async function getAllTimeslots() {
   return apiFetch("/api/timeslots/all")

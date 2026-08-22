@@ -57,6 +57,14 @@ def list_all_timeslots(session: Session = Depends(get_session), admin: User = De
     return session.exec(select(Timeslot).order_by(Timeslot.datetime)).all()
 
 
+@router.get("/timeslots/{timeslot_id}", response_model=TimeslotRead)
+def get_timeslot(timeslot_id: int, session: Session = Depends(get_session)):
+    timeslot = session.get(Timeslot, timeslot_id)
+    if timeslot is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "ไม่พบช่วงเวลา")
+    return timeslot
+
+
 @router.post("/timeslots", response_model=TimeslotRead, status_code=status.HTTP_201_CREATED)
 def create_timeslot(data: TimeslotCreate, session: Session = Depends(get_session), admin: User = Depends(get_current_admin)):
     timeslot = Timeslot(datetime=data.datetime, technician_name=data.technician_name, is_available=True)
