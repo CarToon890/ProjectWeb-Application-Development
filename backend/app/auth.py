@@ -10,9 +10,17 @@ from sqlmodel import Session
 from app.database import get_session
 from app.models import User
 
-JWT_SECRET_KEY = os.environ["JWT_SECRET_KEY"]
-JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
-JWT_EXPIRE_MINUTES = int(os.environ.get("JWT_EXPIRE_MINUTES", "1440"))
+raw_secret = os.environ.get("JWT_SECRET_KEY", "").strip()
+JWT_SECRET_KEY = raw_secret if raw_secret else "disposal-guilt-jwt-secret-key-2026-very-secure-random"
+
+raw_algo = os.environ.get("JWT_ALGORITHM", "").strip()
+JWT_ALGORITHM = raw_algo if raw_algo else "HS256"
+
+raw_minutes = os.environ.get("JWT_EXPIRE_MINUTES", "").strip()
+try:
+    JWT_EXPIRE_MINUTES = int(raw_minutes) if raw_minutes else 1440
+except ValueError:
+    JWT_EXPIRE_MINUTES = 1440
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 bearer_scheme = HTTPBearer()
