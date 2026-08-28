@@ -1,19 +1,44 @@
 import os
+import urllib.parse
 from collections.abc import Generator
 
 from sqlmodel import Session, SQLModel, create_engine
 
-raw_url = os.environ.get(
+
+def clean_database_url(url: str) -> str:
+    """Sanitize and ensure special characters in DB password/user are URL-encoded."""
+    if not url:
+        return url
+    url = url.strip().strip('"').strip("'")
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+
+    try:
+        if "://" in url and "@" in url:
+            scheme, rest = url.split("://", 1)
+            # Find the last '@' which separates credentials from host
+            last_at_idx = rest.rfind("@")
+            if last_at_idx != -1:
+                auth_part = rest[:last_at_idx]
+                host_part = rest[last_at_idx + 1 :]
+                if ":" in auth_part:
+                    user, password = auth_part.split(":", 1)
+                    # Unquote first to prevent double-encoding, then safely quote
+                    safe_user = urllib.parse.quote(urllib.parse.unquote(user), safe="")
+                    safe_password = urllib.parse.quote(urllib.parse.unquote(password), safe="")
+                    return f"{scheme}://{safe_user}:{safe_password}@{host_part}"
+    except Exception as e:
+        print(f"[Database URL Parser Notice] Auto-repair skipped: {e}")
+
+    return url
+
+
+RAW_URL = os.environ.get(
     "DATABASE_URL",
     "postgresql://appuser:apppassword@db:5432/appdb"
 )
 
-# Strip whitespace and potential accidental quotes
-DATABASE_URL = raw_url.strip().strip('"').strip("'")
-
-# Normalize old postgres:// URI scheme to postgresql:// if needed
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+DATABASE_URL = clean_database_url(RAW_URL)
 
 # Serverless-friendly engine options (pool_pre_ping checks connectivity before query)
 engine = create_engine(
