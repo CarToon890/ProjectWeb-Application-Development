@@ -4,7 +4,12 @@
 // token เก็บใน localStorage คีย์ "access_token" (auth.js จะเป็นคนจัดการ)
 // ============================================================
 
-const BASE_URL = "http://localhost:8000"
+// Auto-detect BASE_URL:
+// - ถ้าเปิดผ่าน Live Server (เช่น localhost:5500) -> ยิงไปที่ http://localhost:8000
+// - ถ้าอยู่บน Vercel Production หรือรันผ่าน FastAPI พอร์ต 8000 -> ใช้ Same-Origin Relative Path ""
+const BASE_URL = (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && window.location.port !== "" && window.location.port !== "8000")
+  ? "http://localhost:8000"
+  : "";
 
 // ฟังก์ชันกลาง: เรียก API แล้วคืน JSON หรือ throw error
 // แนบ Authorization: Bearer <token> อัตโนมัติถ้ามี token ใน localStorage

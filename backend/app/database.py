@@ -8,7 +8,17 @@ DATABASE_URL = os.environ.get(
     "postgresql://appuser:apppassword@db:5432/appdb"
 )
 
-engine = create_engine(DATABASE_URL, echo=False)
+# Normalize old postgres:// URI scheme to postgresql:// if needed
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Serverless-friendly engine options (pool_pre_ping checks connectivity before query)
+engine = create_engine(
+    DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,
+    pool_recycle=300,
+)
 
 
 def run_migrations() -> None:
@@ -27,7 +37,10 @@ def run_migrations() -> None:
     except Exception as e:
         print(f"[Alembic] Migration notice: {e}, using SQLModel metadata fallback.")
 
-    SQLModel.metadata.create_all(engine)
+    try:
+        SQLModel.metadata.create_all(engine)
+    except Exception as e:
+        print(f"[Database] SQLModel create_all notice: {e}")
 
 
 def create_db_and_tables() -> None:
