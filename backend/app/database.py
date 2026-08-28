@@ -2,51 +2,80 @@ import os
 import urllib.parse
 from collections.abc import Generator
 
+from sqlalchemy.engine import URL
 from sqlmodel import Session, SQLModel, create_engine
 
 
-def clean_database_url(url: str) -> str:
-    """Sanitize and ensure special characters in DB password/user are URL-encoded."""
-    if not url:
-        return url
-    url = url.strip().strip('"').strip("'")
-    if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
+def get_db_url(raw_url: str):
+    """Parse and convert raw connection string into a safe SQLAlchemy URL object or string."""
+    if not raw_url:
+        return "postgresql://appuser:apppassword@db:5432/appdb"
+
+    clean_url = raw_url.strip().strip('"').strip("'")
+    if clean_url.startswith("postgres://"):
+        clean_url = clean_url.replace("postgres://", "postgresql://", 1)
 
     try:
-        if "://" in url and "@" in url:
-            scheme, rest = url.split("://", 1)
-            # Find the last '@' which separates credentials from host
-            last_at_idx = rest.rfind("@")
-            if last_at_idx != -1:
-                auth_part = rest[:last_at_idx]
-                host_part = rest[last_at_idx + 1 :]
-                if ":" in auth_part:
-                    user, password = auth_part.split(":", 1)
-                    # Unquote first to prevent double-encoding, then safely quote
-                    safe_user = urllib.parse.quote(urllib.parse.unquote(user), safe="")
-                    safe_password = urllib.parse.quote(urllib.parse.unquote(password), safe="")
-                    return f"{scheme}://{safe_user}:{safe_password}@{host_part}"
+        if "://" in clean_url and "@" in clean_url:
+            driver, rest = clean_url.split("://", 1)
+            auth_part, host_part = rest.rsplit("@", 1)
+
+            if ":" in auth_part:
+                user, pwd = auth_part.split(":", 1)
+            else:
+                user, pwd = auth_part, None
+
+            if "/" in host_part:
+                host_port, dbname = host_part.split("/", 1)
+            else:
+                host_port, dbname = host_part, "postgres"
+
+            if "?" in dbname:
+                dbname, _ = dbname.split("?", 1)
+
+            if ":" in host_port:
+                host, port_str = host_port.split(":", 1)
+                try:
+                    port = int(port_str)
+                except ValueError:
+                    port = 5432
+            else:
+                host, port = host_port, 5432
+
+            return URL.create(
+                drivername=driver or "postgresql",
+                username=urllib.parse.unquote(user) if user else None,
+                password=urllib.parse.unquote(pwd) if pwd else None,
+                host=host,
+                port=port,
+                database=dbname or "postgres",
+            )
     except Exception as e:
-        print(f"[Database URL Parser Notice] Auto-repair skipped: {e}")
+        print(f"[DB URL Parser Notice] Using raw url fallback: {e}")
 
-    return url
+    return clean_url
 
 
-RAW_URL = os.environ.get(
+RAW_DATABASE_URL = os.environ.get(
     "DATABASE_URL",
     "postgresql://appuser:apppassword@db:5432/appdb"
 )
 
-DATABASE_URL = clean_database_url(RAW_URL)
+DATABASE_URL = get_db_url(RAW_DATABASE_URL)
 
-# Serverless-friendly engine options (pool_pre_ping checks connectivity before query)
-engine = create_engine(
-    DATABASE_URL,
-    echo=False,
-    pool_pre_ping=True,
-    pool_recycle=300,
-)
+try:
+    engine = create_engine(
+        DATABASE_URL,
+        echo=False,
+        pool_pre_ping=True,
+        pool_recycle=300,
+    )
+except Exception as e:
+    print(f"[Engine Creation Notice] Primary engine error ({e}), falling back...")
+    engine = create_engine(
+        "sqlite:////tmp/fallback.db",
+        echo=False,
+    )
 
 
 def run_migrations() -> None:
