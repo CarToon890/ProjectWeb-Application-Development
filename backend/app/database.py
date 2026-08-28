@@ -3,10 +3,13 @@ from collections.abc import Generator
 
 from sqlmodel import Session, SQLModel, create_engine
 
-DATABASE_URL = os.environ.get(
+raw_url = os.environ.get(
     "DATABASE_URL",
     "postgresql://appuser:apppassword@db:5432/appdb"
 )
+
+# Strip whitespace and potential accidental quotes
+DATABASE_URL = raw_url.strip().strip('"').strip("'")
 
 # Normalize old postgres:// URI scheme to postgresql:// if needed
 if DATABASE_URL.startswith("postgres://"):
