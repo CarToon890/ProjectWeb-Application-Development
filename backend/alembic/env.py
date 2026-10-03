@@ -2,13 +2,15 @@ import os
 import sys
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 from sqlmodel import SQLModel
 
 from alembic import context
 
 # Make sure backend root is in sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+from app.database import DATABASE_URL
 
 # Import all models to register them in SQLModel.metadata
 from app.models import Booking, Item, Product, Timeslot, User  # noqa: F401
@@ -22,18 +24,10 @@ if config.config_file_name is not None:
 target_metadata = SQLModel.metadata
 
 
-def get_url() -> str:
-    return os.environ.get(
-        "DATABASE_URL",
-        "postgresql://appuser:apppassword@db:5432/appdb"
-    )
-
-
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
-    url = get_url()
     context.configure(
-        url=url,
+        url=DATABASE_URL,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -45,14 +39,10 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    configuration = config.get_section(config.config_ini_section, {})
-    configuration["sqlalchemy.url"] = get_url()
-
-    connectable = engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    # Use the same normalized URL as the app engine. The raw Supabase URL can
+    # include Prisma-only options such as `pgbouncer=true`, which psycopg2
+    # rejects when Alembic reads DATABASE_URL directly.
+    connectable = create_engine(DATABASE_URL, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(

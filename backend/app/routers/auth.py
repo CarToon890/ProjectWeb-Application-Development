@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 
@@ -14,27 +16,47 @@ from app.schemas import (
 )
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def register(data: RegisterRequest, session: Session = Depends(get_session)):
-    if session.exec(select(User).where(User.username == data.username)).first():
-        raise HTTPException(status.HTTP_409_CONFLICT, "username นี้ถูกใช้ไปแล้ว")
-    if session.exec(select(User).where(User.email == data.email)).first():
-        raise HTTPException(status.HTTP_409_CONFLICT, "email นี้ถูกใช้ไปแล้ว")
+    stage = "username_lookup"
+    try:
+        if session.exec(select(User).where(User.username == data.username)).first():
+            raise HTTPException(status.HTTP_409_CONFLICT, "username นี้ถูกใช้ไปแล้ว")
 
-    user = User(
-        username=data.username,
-        email=data.email,
-        password_hash=hash_password(data.password),
-        full_name=data.full_name,
-        phone=data.phone,
-        address=data.address,
-    )
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    return user
+        stage = "email_lookup"
+        if session.exec(select(User).where(User.email == data.email)).first():
+            raise HTTPException(status.HTTP_409_CONFLICT, "email นี้ถูกใช้ไปแล้ว")
+
+        stage = "password_hash"
+        password_hash = hash_password(data.password)
+
+        stage = "user_create"
+        user = User(
+            username=data.username,
+            email=data.email,
+            password_hash=password_hash,
+            full_name=data.full_name,
+            phone=data.phone,
+            address=data.address,
+        )
+
+        stage = "database_commit"
+        session.add(user)
+        session.commit()
+
+        stage = "database_refresh"
+        session.refresh(user)
+        return user
+    except HTTPException:
+        raise
+    except Exception as exc:
+        # Record only the operation and exception class; never log submitted
+        # registration fields, password hashes, or database parameters.
+        logger.error("Registration failed at stage=%s exception=%s", stage, type(exc).__name__)
+        raise
 
 
 @router.post("/login", response_model=TokenResponse)
