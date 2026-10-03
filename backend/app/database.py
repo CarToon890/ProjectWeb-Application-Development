@@ -11,7 +11,18 @@ def get_db_url(raw_url: str):
     if not raw_url:
         return "postgresql://appuser:apppassword@db:5432/appdb"
 
-    clean_url = raw_url.strip().strip('"').strip("'")
+    clean_url = raw_url.strip()
+    # Strip any prefix like DATABASE_URL= or export DATABASE_URL=
+    if clean_url.startswith("export "):
+        clean_url = clean_url[7:].strip()
+    if clean_url.startswith("DATABASE_URL="):
+        clean_url = clean_url[len("DATABASE_URL="):].strip()
+    elif clean_url.startswith("DATABASE_URL ="):
+        clean_url = clean_url.split("=", 1)[1].strip()
+
+    # Strip surrounding quotes
+    clean_url = clean_url.strip().strip('"').strip("'")
+
     if clean_url.startswith("postgres://"):
         clean_url = clean_url.replace("postgres://", "postgresql://", 1)
 
@@ -30,8 +41,13 @@ def get_db_url(raw_url: str):
             else:
                 host_port, dbname = host_part, "postgres"
 
+            query_dict = {}
             if "?" in dbname:
-                dbname, _ = dbname.split("?", 1)
+                dbname, query_str = dbname.split("?", 1)
+                for q in query_str.split("&"):
+                    if "=" in q:
+                        qk, qv = q.split("=", 1)
+                        query_dict[qk] = qv
 
             if ":" in host_port:
                 host, port_str = host_port.split(":", 1)
@@ -43,17 +59,19 @@ def get_db_url(raw_url: str):
                 host, port = host_port, 5432
 
             return URL.create(
-                drivername=driver or "postgresql",
+                drivername="postgresql",
                 username=urllib.parse.unquote(user) if user else None,
                 password=urllib.parse.unquote(pwd) if pwd else None,
                 host=host,
                 port=port,
                 database=dbname or "postgres",
+                query=query_dict if query_dict else None,
             )
     except Exception as e:
         print(f"[DB URL Parser Notice] Using raw url fallback: {e}")
 
     return clean_url
+
 
 
 RAW_DATABASE_URL = os.environ.get(
