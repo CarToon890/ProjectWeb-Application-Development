@@ -1,7 +1,9 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
@@ -23,6 +25,19 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="The Disposal Guilt API", lifespan=lifespan)
+logger = logging.getLogger(__name__)
+
+
+@app.exception_handler(Exception)
+async def handle_unexpected_exception(request: Request, exc: Exception):
+    # Keep diagnostics useful without logging request bodies, credentials, or
+    # database exception text that may contain user-provided values.
+    logger.error(
+        "Unhandled API exception path=%s exception=%s",
+        request.url.path,
+        type(exc).__name__,
+    )
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 # Allow CORS
 app.add_middleware(
