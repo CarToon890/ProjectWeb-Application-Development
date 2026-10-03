@@ -98,7 +98,7 @@
         summary.innerHTML = `
           <div class="summary-row"><span class="label">วันเวลานัดหมาย</span><span class="value">${dateStr} (${timeStr})</span></div>
           <div class="summary-row"><span class="label">ทีมช่างผู้ดูแล</span><span class="value text-accent">${data.timeslot.technician_name}</span></div>
-          <div class="summary-row"><span class="label">ยอดชำระสุทธิ</span><span class="value text-ok">฿${data.total_price.toLocaleString()} บาท</span></div>
+          <div class="summary-row"><span class="label">${data.total_price < 0 ? "เงินคืนส่วนต่าง" : "ยอดชำระสุทธิ"}</span><span class="value text-ok">${formatBookingAmount(data.total_price)}</span></div>
           <div class="summary-row"><span class="label">สถานที่</span><span class="value" style="max-width:60%; text-align:right;">${data.address}</span></div>
         `
 

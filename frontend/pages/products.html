@@ -237,7 +237,7 @@
         card.className = 'product-card'
         card.innerHTML = `
           <div class="product-card-img-wrap">
-            <img src="${p.image_url || ''}" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80'" />
+            <img src="${p.image_url || ''}" alt="${p.name}" onerror="this.onerror=null;this.src='${getProductFallbackImage(p.category)}'" />
             <div class="product-stock-tag ${p.stock <= 0 ? 'badge-danger' : ''}">
               ${p.stock > 0 ? `คงเหลือ ${p.stock} ชิ้น` : 'สินค้าหมด'}
             </div>

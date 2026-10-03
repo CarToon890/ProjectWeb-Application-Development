@@ -5,6 +5,25 @@
 // ============================================================
 
 // ---------- Nav Link Definitions (with Lucide icon names) ----------
+const PRODUCT_FALLBACK_PHOTOS = {
+  sofa: "photo-1555041469-a586c61ea9bc",
+  table: "photo-1449247709967-d4461a6a6103",
+  chair: "photo-1503602642458-232111445657",
+  bed: "photo-1505693416388-ac5ce068fe85",
+  wardrobe: "photo-1595428774223-ef52624120d2",
+  shelf: "photo-1538688423619-a81d3f23454b",
+}
+
+function getProductFallbackImage(category, width = 400) {
+  const photo = PRODUCT_FALLBACK_PHOTOS[category] || PRODUCT_FALLBACK_PHOTOS.sofa
+  return `https://images.unsplash.com/${photo}?auto=format&fit=crop&w=${width}&q=80`
+}
+
+function formatBookingAmount(amount) {
+  if (amount < 0) return `ได้เงินคืน ฿${Math.abs(amount).toLocaleString()} บาท`
+  return `฿${amount.toLocaleString()} บาท`
+}
+
 const CUSTOMER_NAV_LINKS = [
   { key: "home", label: "หน้าแรก", icon: "home", path: "index.html" },
   { key: "assess", label: "ประเมินของเก่า", icon: "clipboard-list", path: "pages/assessment-form.html" },
@@ -229,7 +248,7 @@ function renderFooter({ root = "", dir = "pages" } = {}) {
             ทุกการ Trade-in ช่วยลดการตัดไม้ทำลายป่า และลดการปล่อยก๊าซเรือนกระจกจากการกำจัดขยะขนาดใหญ่
           </p>
           <div style="background: var(--surface-2); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 12px; color: var(--muted);">
-            🌱 1 ชิ้นเฟอร์นิเจอร์ $\approx$ ลด CO₂ ได้ ~12-36 กก.
+            🌱 1 ชิ้นเฟอร์นิเจอร์ ≈ ลด CO₂ ได้ ~12-36 กก.
           </div>
         </div>
       </div>

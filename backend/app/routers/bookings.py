@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlmodel import Session, select
 
 from app.auth import get_current_admin, get_current_staff, get_current_user
@@ -34,10 +34,44 @@ def _require_owner_or_admin(booking: Booking, current: User) -> None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "ไม่มีสิทธิ์เข้าถึงการจองนี้")
 
 
-def _require_access(booking: Booking, current: User) -> None:
-    # staff ต้องดูรายละเอียดงานที่ตัวเองไปรับ-ส่งได้ด้วย ไม่ใช่แค่เจ้าของหรือ admin
-    if current.role not in ("admin", "staff") and booking.user_id != current.id:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "ไม่มีสิทธิ์เข้าถึงการจองนี้")
+def _require_access(booking: Booking, current: User, timeslot: Timeslot) -> None:
+    if current.role == "admin" or booking.user_id == current.id:
+        return
+    _require_staff_assignment(timeslot, current, "ไม่มีสิทธิ์เข้าถึงการจองนี้")
+
+
+def _require_staff_assignment(timeslot: Timeslot, current: User, detail: str) -> None:
+    if current.role == "staff" and timeslot.technician_name != current.full_name:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail)
+    if current.role not in ("staff", "admin"):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail)
+
+
+def _normalize_utc(value: datetime | str) -> datetime | None:
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    if not isinstance(value, datetime):
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def _fallback_future_timeslots(session: Session) -> list[Timeslot]:
+    """Filter in Python if the database cannot compare its legacy time column."""
+    now = datetime.now(timezone.utc)
+    slots = session.exec(select(Timeslot).order_by(Timeslot.datetime)).all()
+    result = []
+    for slot in slots:
+        available = slot.is_available
+        if isinstance(available, str):
+            available = available.strip().lower() in ("1", "true", "t", "yes", "y")
+        if available and (_normalize_utc(slot.datetime) or datetime.min.replace(tzinfo=timezone.utc)) > now:
+            result.append(slot)
+    return result
 
 
 @router.get("/timeslots", response_model=list[TimeslotRead])
@@ -48,7 +82,14 @@ def list_timeslots(session: Session = Depends(get_session)):
         .where(Timeslot.datetime > datetime.utcnow())
         .order_by(Timeslot.datetime)
     )
-    return session.exec(query).all()
+    try:
+        return session.exec(query).all()
+    except SQLAlchemyError:
+        # Some deployed databases predate the DateTime/Boolean schema migration.
+        # The admin listing still reads those rows, so filter the same values after
+        # loading them instead of failing every customer booking flow with HTTP 500.
+        session.rollback()
+        return _fallback_future_timeslots(session)
 
 
 # แอดมินต้องเห็นรอบเวลาทั้งหมด รวมที่จองไปแล้ว/หมดอายุแล้ว เพื่อจัดการได้ครบ ไม่ใช่แค่ที่ว่างเหมือน list_timeslots
@@ -180,14 +221,13 @@ def get_booking_detail(booking_id: int, session: Session = Depends(get_session),
     booking = session.get(Booking, booking_id)
     if booking is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "ไม่พบการจอง")
-    _require_access(booking, user)
-
     item = session.get(Item, booking.item_id)
     product = session.get(Product, booking.product_id) if booking.product_id is not None else None
     timeslot = session.get(Timeslot, booking.timeslot_id)
     owner = session.get(User, booking.user_id)
     if item is None or timeslot is None or owner is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "ข้อมูลการจองไม่ครบถ้วน")
+    _require_access(booking, user, timeslot)
 
     return BookingDetailRead(
         id=booking.id,
@@ -236,6 +276,11 @@ def update_booking_status(
     booking = session.get(Booking, booking_id)
     if booking is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "ไม่พบการจอง")
+
+    timeslot = session.get(Timeslot, booking.timeslot_id)
+    if timeslot is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "ไม่พบช่วงเวลาของการจอง")
+    _require_staff_assignment(timeslot, current, "ไม่มีสิทธิ์อัปเดตงานที่ไม่ได้รับมอบหมาย")
 
     booking.status = data.status
     session.add(booking)

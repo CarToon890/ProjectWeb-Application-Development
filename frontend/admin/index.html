@@ -147,7 +147,7 @@
                 <td>ผู้ใช้ #${b.user_id}</td>
                 <td>${dateStr} ${timeStr} น.</td>
                 <td><span class="badge ${badgeCls}">${label}</span></td>
-                <td><strong>฿${b.total_price.toLocaleString()} บาท</strong></td>
+                <td><strong>${formatBookingAmount(b.total_price)}</strong></td>
               </tr>
             `
           }).join("")

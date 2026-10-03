@@ -65,7 +65,7 @@
       <div class="split-layout" id="content" style="display: none;">
         <!-- Left: Product Image & Details -->
         <div>
-          <img class="product-hero-photo" id="product-photo" onerror="this.src='https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'" />
+          <img class="product-hero-photo" id="product-photo" onerror="this.onerror=null;this.src=getProductFallbackImage(this.dataset.category, 800)" />
 
           <div class="card card-static" style="padding: var(--sp-6);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-2);">
@@ -174,9 +174,9 @@
         const discount = item ? item.estimated_price : 0
         const total = product.price - discount
 
-        if (product.image_url) {
-          document.getElementById('product-photo').src = product.image_url
-        }
+        const productPhoto = document.getElementById('product-photo')
+        productPhoto.dataset.category = product.category
+        productPhoto.src = product.image_url || getProductFallbackImage(product.category, 800)
         document.getElementById('product-name').textContent = product.name
         document.getElementById('product-category').textContent = `หมวดหมู่: ${product.category}`
         document.getElementById('product-stock').textContent = product.stock > 0 ? `มีสินค้า (${product.stock} ชิ้น)` : 'สินค้าหมด'

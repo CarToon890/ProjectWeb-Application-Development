@@ -242,7 +242,7 @@
         // Financials
         document.getElementById('product-price-val').textContent = product ? `฿${product.price.toLocaleString()} บาท` : '฿0'
         document.getElementById('discount-price-val').textContent = `- ฿${item.estimated_price.toLocaleString()} บาท`
-        document.getElementById('total-price-val').textContent = `฿${data.total_price.toLocaleString()} บาท`
+        document.getElementById('total-price-val').textContent = formatBookingAmount(data.total_price)
 
         // Cancel button state
         if (data.status === 'pending' || data.status === 'confirmed') {

@@ -145,8 +145,8 @@
               <span class="value">${b.product_id ? `#${b.product_id}` : "ไม่มี (คืนส่วนลด)"}</span>
             </div>
             <div class="booking-row">
-              <span class="label">ยอดสุทธิที่ชำระ</span>
-              <span class="value text-ok">฿${b.total_price.toLocaleString()} บาท</span>
+              <span class="label">${b.total_price < 0 ? "เงินคืนส่วนต่าง" : "ยอดสุทธิที่ชำระ"}</span>
+              <span class="value text-ok">${formatBookingAmount(b.total_price)}</span>
             </div>
 
             <div style="margin-top: var(--sp-4); text-align: right;">

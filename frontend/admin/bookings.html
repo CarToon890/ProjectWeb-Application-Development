@@ -135,7 +135,7 @@
             <td>${userText}</td>
             <td>${itemText}</td>
             <td>${productText}</td>
-            <td><strong>฿${b.total_price.toLocaleString()} บาท</strong></td>
+            <td><strong>${formatBookingAmount(b.total_price)}</strong></td>
             <td><span class="badge ${badgeCls}">${currentLabel}</span></td>
             <td>
               <select class="inline-select status-select" data-id="${b.id}">
