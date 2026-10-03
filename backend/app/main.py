@@ -44,9 +44,39 @@ app.include_router(uploads.router, prefix="/api", tags=["uploads"])
 app.include_router(staff.router, prefix="/api", tags=["staff"])
 
 
+from app.models import User
+
+
 @app.get("/api/health", tags=["health"])
 def health_check():
-    return {"status": "ok", "service": "The Disposal Guilt API"}
+    db_url_str = str(engine.url)
+    if "@" in db_url_str:
+        prefix, suffix = db_url_str.split("@", 1)
+        driver = prefix.split(":")[0]
+        safe_url = f"{driver}://***@{suffix}"
+    else:
+        safe_url = db_url_str
+
+    db_connected = False
+    user_count = -1
+    db_err = None
+    try:
+        with Session(engine) as s:
+            users = s.exec(select(User)).all()
+            user_count = len(users)
+            db_connected = True
+    except Exception as e:
+        db_err = str(e)
+
+    return {
+        "status": "ok",
+        "service": "The Disposal Guilt API",
+        "safe_db_url": safe_url,
+        "db_connected": db_connected,
+        "user_count": user_count,
+        "error": db_err,
+    }
+
 
 
 # Mount static frontend for local dev if directory exists
