@@ -50,9 +50,24 @@ def register(data: RegisterRequest, session: Session = Depends(get_session)):
     except HTTPException:
         raise
     except Exception as exc:
-        # Record only the operation and exception class; never log submitted
-        # registration fields, password hashes, or database parameters.
-        print(f"Registration failed stage={stage} exception={type(exc).__name__}", flush=True)
+        # Record only operation/error metadata and bind value types; never log
+        # submitted fields, password hashes, or bound values.
+        original = getattr(exc, "orig", None)
+        params = getattr(exc, "params", None)
+        if isinstance(params, dict):
+            bind_types = {key: type(value).__name__ for key, value in params.items()}
+        elif isinstance(params, (tuple, list)):
+            bind_types = [type(value).__name__ for value in params]
+        else:
+            bind_types = None
+        sqlstate = getattr(original, "pgcode", None)
+        print(
+            "Registration failed "
+            f"stage={stage} exception={type(exc).__name__} "
+            f"original={type(original).__name__ if original else None} "
+            f"sqlstate={sqlstate} bind_types={bind_types}",
+            flush=True,
+        )
         raise
 
 
