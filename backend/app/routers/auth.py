@@ -1,3 +1,5 @@
+import traceback
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 
@@ -54,6 +56,7 @@ def register(data: RegisterRequest, session: Session = Depends(get_session)):
         # submitted fields, password hashes, or bound values.
         original = getattr(exc, "orig", None)
         params = getattr(exc, "params", None)
+
         def summarize_types(value):
             if isinstance(value, dict):
                 return {key: summarize_types(item) for key, item in value.items()}
@@ -63,11 +66,16 @@ def register(data: RegisterRequest, session: Session = Depends(get_session)):
 
         bind_types = summarize_types(params) if params is not None else None
         sqlstate = getattr(original, "pgcode", None)
+        trace = getattr(original, "__traceback__", None) or exc.__traceback__
+        frames = [
+            f"{frame.filename.rsplit('/', 1)[-1]}:{frame.lineno}:{frame.name}"
+            for frame in traceback.extract_tb(trace)
+        ]
         print(
             "Registration failed "
             f"stage={stage} exception={type(exc).__name__} "
             f"original={type(original).__name__ if original else None} "
-            f"sqlstate={sqlstate} bind_types={bind_types}",
+            f"sqlstate={sqlstate} bind_types={bind_types} frames={frames}",
             flush=True,
         )
         raise
