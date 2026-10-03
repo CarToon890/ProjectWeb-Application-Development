@@ -44,7 +44,9 @@ app.include_router(uploads.router, prefix="/api", tags=["uploads"])
 app.include_router(staff.router, prefix="/api", tags=["staff"])
 
 
+from app.database import ENGINE_ERROR, RAW_DATABASE_URL
 from app.models import User
+from sqlmodel import select
 
 
 @app.get("/api/health", tags=["health"])
@@ -57,25 +59,39 @@ def health_check():
     else:
         safe_url = db_url_str
 
+    raw_env = os.environ.get("DATABASE_URL")
+    has_raw_env = bool(raw_env)
+    env_masked = None
+    if raw_env:
+        if "@" in raw_env:
+            p, s = raw_env.split("@", 1)
+            env_masked = f"{p.split(':')[0]}://***@{s}"
+        else:
+            env_masked = raw_env[:15] + "..."
+
     db_connected = False
     user_count = -1
-    db_err = None
+    query_err = None
     try:
         with Session(engine) as s:
             users = s.exec(select(User)).all()
             user_count = len(users)
             db_connected = True
     except Exception as e:
-        db_err = str(e)
+        query_err = str(e)
 
     return {
         "status": "ok",
         "service": "The Disposal Guilt API",
-        "safe_db_url": safe_url,
+        "has_database_url_env": has_raw_env,
+        "env_database_url_target": env_masked,
+        "active_engine_url": safe_url,
+        "engine_creation_error": ENGINE_ERROR,
         "db_connected": db_connected,
         "user_count": user_count,
-        "error": db_err,
+        "query_error": query_err,
     }
+
 
 
 

@@ -63,6 +63,8 @@ RAW_DATABASE_URL = os.environ.get(
 
 DATABASE_URL = get_db_url(RAW_DATABASE_URL)
 
+ENGINE_ERROR = None
+
 try:
     engine = create_engine(
         DATABASE_URL,
@@ -71,11 +73,13 @@ try:
         pool_recycle=300,
     )
 except Exception as e:
+    ENGINE_ERROR = str(e)
     print(f"[Engine Creation Notice] Primary engine error ({e}), falling back...")
     engine = create_engine(
         "sqlite:////tmp/fallback.db",
         echo=False,
     )
+
 
 
 def run_migrations() -> None:
