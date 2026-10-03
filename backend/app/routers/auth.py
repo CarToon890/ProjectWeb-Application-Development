@@ -54,12 +54,14 @@ def register(data: RegisterRequest, session: Session = Depends(get_session)):
         # submitted fields, password hashes, or bound values.
         original = getattr(exc, "orig", None)
         params = getattr(exc, "params", None)
-        if isinstance(params, dict):
-            bind_types = {key: type(value).__name__ for key, value in params.items()}
-        elif isinstance(params, (tuple, list)):
-            bind_types = [type(value).__name__ for value in params]
-        else:
-            bind_types = None
+        def summarize_types(value):
+            if isinstance(value, dict):
+                return {key: summarize_types(item) for key, item in value.items()}
+            if isinstance(value, (tuple, list)):
+                return [summarize_types(item) for item in value]
+            return type(value).__name__
+
+        bind_types = summarize_types(params) if params is not None else None
         sqlstate = getattr(original, "pgcode", None)
         print(
             "Registration failed "
