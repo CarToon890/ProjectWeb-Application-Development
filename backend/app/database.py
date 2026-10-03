@@ -41,6 +41,15 @@ def get_db_url(raw_url: str):
             else:
                 host_port, dbname = host_part, "postgres"
 
+            if ":" in host_port:
+                host, port_str = host_port.split(":", 1)
+                try:
+                    port = int(port_str)
+                except ValueError:
+                    port = 5432
+            else:
+                host, port = host_port, 5432
+
             query_dict = {}
             if "?" in dbname:
                 dbname, query_str = dbname.split("?", 1)
@@ -55,16 +64,6 @@ def get_db_url(raw_url: str):
             if "pooler.supabase.com" in host or "supabase.co" in host:
                 query_dict.setdefault("sslmode", "require")
 
-
-            if ":" in host_port:
-                host, port_str = host_port.split(":", 1)
-                try:
-                    port = int(port_str)
-                except ValueError:
-                    port = 5432
-            else:
-                host, port = host_port, 5432
-
             return URL.create(
                 drivername="postgresql",
                 username=urllib.parse.unquote(user) if user else None,
@@ -74,6 +73,7 @@ def get_db_url(raw_url: str):
                 database=dbname or "postgres",
                 query=query_dict if query_dict else None,
             )
+
     except Exception as e:
         print(f"[DB URL Parser Notice] Using raw url fallback: {e}")
 
