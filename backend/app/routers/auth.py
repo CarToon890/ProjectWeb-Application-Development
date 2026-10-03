@@ -1,5 +1,3 @@
-import logging
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 
@@ -16,7 +14,6 @@ from app.schemas import (
 )
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
 
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
@@ -55,7 +52,7 @@ def register(data: RegisterRequest, session: Session = Depends(get_session)):
     except Exception as exc:
         # Record only the operation and exception class; never log submitted
         # registration fields, password hashes, or database parameters.
-        logger.error("Registration failed at stage=%s exception=%s", stage, type(exc).__name__)
+        print(f"Registration failed stage={stage} exception={type(exc).__name__}", flush=True)
         raise
 
 

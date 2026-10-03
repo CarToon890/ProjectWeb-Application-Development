@@ -1,4 +1,3 @@
-import logging
 import os
 from contextlib import asynccontextmanager
 
@@ -25,17 +24,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="The Disposal Guilt API", lifespan=lifespan)
-logger = logging.getLogger(__name__)
 
 
 @app.exception_handler(Exception)
 async def handle_unexpected_exception(request: Request, exc: Exception):
     # Keep diagnostics useful without logging request bodies, credentials, or
     # database exception text that may contain user-provided values.
-    logger.error(
-        "Unhandled API exception path=%s exception=%s",
-        request.url.path,
-        type(exc).__name__,
+    print(
+        f"Unhandled API exception path={request.url.path} exception={type(exc).__name__}",
+        flush=True,
     )
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
