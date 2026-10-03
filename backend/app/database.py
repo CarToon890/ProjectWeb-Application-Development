@@ -47,7 +47,14 @@ def get_db_url(raw_url: str):
                 for q in query_str.split("&"):
                     if "=" in q:
                         qk, qv = q.split("=", 1)
-                        query_dict[qk] = qv
+                        # psycopg2 rejects 'pgbouncer' and 'connection_limit' (these are Prisma specific)
+                        if qk.lower() not in ("pgbouncer", "connection_limit"):
+                            query_dict[qk] = qv
+
+            # Ensure sslmode for Supabase if not specified
+            if "pooler.supabase.com" in host or "supabase.co" in host:
+                query_dict.setdefault("sslmode", "require")
+
 
             if ":" in host_port:
                 host, port_str = host_port.split(":", 1)
