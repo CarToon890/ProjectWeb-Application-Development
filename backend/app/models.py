@@ -19,21 +19,21 @@ class User(SQLModel, table=True):
 
 class Item(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
+    user_id: int = Field(foreign_key="user.id", index=True)
     furniture_type: str
     condition: str
     description: Optional[str] = None
     photo_url: Optional[str] = None
     estimated_price: int
     co2_saved_kg: float
-    status: str = Field(default="pending")
+    status: str = Field(default="pending", index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class Product(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
-    category: str
+    category: str = Field(index=True)
     price: int
     image_url: Optional[str] = None
     stock: int
@@ -45,13 +45,18 @@ class Timeslot(SQLModel, table=True):
     technician_name: str
     is_available: bool = Field(default=True)
 
+    # Composite Index: กรอง is_available + datetime และช่วย ORDER BY datetime โดยไม่ต้อง Sort
+    __table_args__ = (
+        Index("ix_timeslot_available_datetime", "is_available", "datetime"),
+    )
+
 
 class Booking(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
-    item_id: int = Field(foreign_key="item.id")
+    user_id: int = Field(foreign_key="user.id", index=True)
+    item_id: int = Field(foreign_key="item.id", index=True)
     product_id: Optional[int] = Field(default=None, foreign_key="product.id")
-    timeslot_id: int = Field(foreign_key="timeslot.id")
+    timeslot_id: int = Field(foreign_key="timeslot.id", index=True)
     address: str
     total_price: int
     status: str = Field(default="pending")
@@ -67,3 +72,4 @@ class Booking(SQLModel, table=True):
             sqlite_where=text("status != 'cancelled'"),
         ),
     )
+
