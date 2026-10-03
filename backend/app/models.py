@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import Index, text
@@ -14,7 +14,7 @@ class User(SQLModel, table=True):
     phone: Optional[str] = None
     address: Optional[str] = None
     role: str = Field(default="user")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class Item(SQLModel, table=True):
@@ -27,7 +27,7 @@ class Item(SQLModel, table=True):
     estimated_price: int
     co2_saved_kg: float
     status: str = Field(default="pending", index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class Product(SQLModel, table=True):
@@ -60,7 +60,7 @@ class Booking(SQLModel, table=True):
     address: str
     total_price: int
     status: str = Field(default="pending")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # unique เฉพาะการจองที่ยัง active — จอง timeslot เดิมซ้ำได้หลัง cancel
     __table_args__ = (

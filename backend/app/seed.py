@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlmodel import Session, select
 
@@ -27,7 +27,7 @@ def seed_data(session: Session) -> None:
             session.add(Product(**data))
 
     if not session.exec(select(Timeslot)).first():
-        base = datetime.utcnow().replace(minute=0, second=0, microsecond=0) + timedelta(days=1)
+        base = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0) + timedelta(days=1)
         slot_count = 0
         for day in range(6):
             for hour in (9, 13, 15):

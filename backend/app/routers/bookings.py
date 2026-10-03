@@ -79,7 +79,7 @@ def list_timeslots(session: Session = Depends(get_session)):
     query = (
         select(Timeslot)
         .where(Timeslot.is_available == True)  # noqa: E712
-        .where(Timeslot.datetime > datetime.utcnow())
+        .where(Timeslot.datetime > datetime.now(timezone.utc))
         .order_by(Timeslot.datetime)
     )
     try:
@@ -170,7 +170,7 @@ def create_booking(data: BookingCreate, session: Session = Depends(get_session),
     timeslot = session.get(Timeslot, data.timeslot_id)
     if timeslot is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "ไม่พบช่วงเวลา")
-    if not timeslot.is_available or timeslot.datetime <= datetime.utcnow():
+    if not timeslot.is_available or (_normalize_utc(timeslot.datetime) or datetime.min.replace(tzinfo=timezone.utc)) <= datetime.now(timezone.utc):
         raise HTTPException(status.HTTP_409_CONFLICT, "ช่วงเวลานี้เพิ่งถูกจอง กรุณาเลือกใหม่")
 
     total_price = (product.price if product else 0) - item.estimated_price
