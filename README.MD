@@ -21,7 +21,7 @@
 |---|---|
 | **Frontend Framework** | Vanilla HTML5, CSS3, Modern JavaScript (ES6+) เรียก API ด้วย `fetch()` |
 | **Design System** | Professional Navy Theme v3.0, 8pt Spacing Scale, 12-Column Grid, Dark Mode Toggle |
-| **Icon Library** | Lucide Icons (SVG Vector, 0 Emoji, ประมวลผลผ่าน `lucide.createIcons()`) |
+| **Icon Library** | Lucide Icons (SVG Vector) พร้อมข้อความ/สัญลักษณ์ตกแต่งบางจุด |
 | **UI Components** | Top Navbar, Mobile Drawer, 4-Step Stepper Wizard, 2-Column Split Layout, Toast Notification, Ripple Animation, Rich 4-Column Footer |
 | **Backend Framework** | FastAPI (Python 3.12) ตามมาตรฐาน RESTful Architecture |
 | **Data & ORM** | SQLModel (Pydantic v2 + SQLAlchemy) |
@@ -221,7 +221,7 @@ ProjectWeb-Application-Development/
 
 ## 6. การจัดการ Database Migrations ด้วย Alembic
 
-ระบบมาพร้อมกับ **Alembic Database Migration** ซึ่งจะรัน `alembic upgrade head` อัตโนมัติทุกครั้งที่เริ่มรัน Docker Container ทำให้คุณสามารถปรับแต่งตารางได้โดยที่ข้อมูลเก่าไม่สูญหาย
+ระบบเรียกใช้ **Alembic Database Migration** ตอนเริ่มแอป โดยพยายามรัน `alembic upgrade head` ก่อน seed ข้อมูล หาก migration ผิดพลาด โค้ดจะ log notice แล้วลอง `SQLModel.metadata.create_all()` เป็น fallback; fallback นี้สร้างเฉพาะตารางที่ยังไม่มีและไม่ migrate ตารางเดิม จึงต้องตรวจ migration status และ backup ก่อนเปลี่ยน schema ที่ใช้งานจริง
 
 ### คำสั่งสำหรับการแก้ไข Schema ในอนาคต:
 
@@ -256,8 +256,8 @@ ProjectWeb-Application-Development/
 2. **Full Dark Mode Support**:
    - รองรับโหมดมืดสมบูรณ์แบบ (`[data-theme="dark"]`) พร้อมปุ่ม Toggle สลับโหมดบน Navbar
    - บันทึกการตั้งค่าลง `localStorage` และ Sync ตาม System Preference อัตโนมัติ
-3. **100% SVG Lucide Icons**:
-   - ใช้ Lucide Icons สไตล์มินิมอล คมชัดทุกความละเอียด ไร้การใช้งาน Emoji ในโค้ด
+3. **Lucide Icons**:
+   - ใช้ Lucide Icons เป็นชุดไอคอนหลัก และมี Emoji/สัญลักษณ์ตกแต่งบางจุดในข้อความ
 4. **4-Step Stepper Wizard**:
    - แถบแสดงสถานะขั้นตอนการ Trade-in (1. ประเมิน -> 2. เลือกของใหม่ -> 3. นัดวัน-เวลา -> 4. ยืนยัน)
 5. **2-Column Split Layout & Sticky Sidebars**:
@@ -270,7 +270,7 @@ ProjectWeb-Application-Development/
 ## 8. รายการ RESTful API Endpoints
 
 - **Auth:** `POST /api/register`, `POST /api/login`, `POST /api/logout`, `POST /api/change-password`, `GET /api/check-username/{name}`
-- **Users:** `GET /api/me`, `PUT /api/me`, `GET /api/users`, `PUT /api/users/{id}/role`
+- **Users:** `GET /api/me`, `GET /api/users`, `GET /api/users/{id}`, `PUT /api/users/{id}`, `PUT /api/users/{id}/role`, `DELETE /api/users/{id}`. ไม่มี `PUT /api/me`; แก้ไขโปรไฟล์ผ่าน `/api/users/{id}`
 - **Items (ของเก่า):** `GET /api/items`, `POST /api/items`, `GET /api/items/{id}`, `PUT /api/items/{id}`, `DELETE /api/items/{id}`
 - **Products (ของใหม่):** `GET /api/products`, `GET /api/products/{id}`, `POST /api/products`, `PUT /api/products/{id}`, `DELETE /api/products/{id}`
 - **Timeslots:** `GET /api/timeslots`, `GET /api/timeslots/all`, `POST /api/timeslots`, `PUT /api/timeslots/{id}`, `DELETE /api/timeslots/{id}`
@@ -278,3 +278,4 @@ ProjectWeb-Application-Development/
 - **Staff:** `GET /api/staff/jobs`
 - **Uploads:** `POST /api/uploads`
 - **Eco Stats:** `GET /api/eco-stats`, `GET /api/eco-stats/me`
+- **Health:** `GET /api/health` (สถานะ API/การเชื่อมต่อ DB และข้อมูลวินิจฉัย)

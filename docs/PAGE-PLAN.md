@@ -1,25 +1,30 @@
 # แผนผังหน้าเว็บและสถาปัตยกรรมระบบ — The Disposal Guilt
 
-> **เอกสารภาพรวมระบบและหน้าเว็บทั้งหมด (อัปเดตสถานะล่าสุด: สิงหาคม 2026)**  
+> **เอกสารภาพรวมระบบและหน้าเว็บทั้งหมด (ตรวจทานเทียบโค้ด: ตุลาคม 2026)**
 > โครงสร้างระบบ: **Frontend** = Vanilla HTML5 + CSS3 (Design System v3.0) + Modern JavaScript + Lucide Icons | **Backend** = FastAPI + SQLModel + PostgreSQL 16 + Alembic Migration | **Auth** = JWT ใน `localStorage` + Role-based Access Control (`user`, `staff`, `admin`)
 
 ---
 
 ## 1. สรุปสถานะการพัฒนาภาพรวม (Implementation Status)
 
-ระบบพัฒนาเสร็จสมบูรณ์ **100% ครบทุกโมดูล** (รวม 23 หน้า HTML + 4 Shared JS Modules + 1 Central CSS Design System + ระบบ Alembic Migration):
+โปรเจกต์มีหน้า HTML 23 หน้า, Shared JS Modules 4 ไฟล์ และระบบ API/ฐานข้อมูลตามรายการด้านล่าง รายการนี้เป็นแผนผังความสามารถ ไม่ใช่ผลรับรองว่าทุก flow ผ่านการทดสอบหรือข้อมูลทุกส่วนถูกบันทึกถาวร:
 
 ```text
 สถานะการทำงาน:
 [COMPLETED] Design System v3.0 (Navy Palette + Dark Mode + 8pt Spacing Scale + 12-Column Grid)
-[COMPLETED] 100% SVG Lucide Icons (ไม่มี Emoji ในระบบ)
+[IMPLEMENTED] Lucide Icons เป็นชุดไอคอนหลัก (ยังมี Emoji/สัญลักษณ์ตกแต่งบางจุด)
 [COMPLETED] Trade-in 4-Step Stepper Wizard Component
 [COMPLETED] 2-Column Split Layouts บนหน้า Checkout / Product Detail / Booking Detail
 [COMPLETED] Customer Flow ครบวงจร (ประเมิน -> ผลประเมิน -> เลือกของใหม่ -> นัดวันเวลา -> จองสำเร็จ)
 [COMPLETED] Staff Job Management & Digital Checklist
 [COMPLETED] Admin Management Dashboard (การจอง, ของเก่า, สินค้า, รอบเวลา, ผู้ใช้)
 [COMPLETED] Backend RESTful API & PostgreSQL Database Seed
-[COMPLETED] Alembic Database Migration System (Auto-upgrade on startup + Baseline revision)
+[IMPLEMENTED WITH LIMITATIONS] Alembic migrations 0001 และ 0002; startup พยายาม upgrade และใช้ create_all fallback เมื่อ migration ล้มเหลว
+
+ข้อจำกัดที่ควรทราบ:
+- Checklist หน้างานเก็บสถานะ checkbox ในหน่วยความจำของหน้าเว็บเท่านั้น; backend บันทึกเฉพาะสถานะ Booking เมื่อกดปิดงาน
+- รูปหน้างานและรูปผนังถูกส่งไปอัปโหลด แต่หน้า checklist ไม่เก็บ URL กลับเข้ากับ booking เพื่อเรียกดูภายหลัง
+- การเริ่มต้น Alembic เป็นแบบ best-effort: หาก upgrade ล้มเหลว ระบบ fallback ไป create_all ซึ่งไม่ได้แทนการ migrate ตารางเดิม
 ```
 
 ---
@@ -86,7 +91,7 @@ SHARED MODULES & DESIGN SYSTEM
 | 12 | `pages/booking-detail.html` | User | 2-Column Split แสดง Vertical Timeline และปุ่มยกเลิก | `GET /api/bookings/{id}/detail`, `PUT /api/bookings/{id}/cancel` |
 | 13 | `pages/my-items.html` | User | รายการของเก่าของผู้ใช้ พร้อมฟังก์ชันแก้ไขประเภท/สภาพ หรือลบ | `GET /api/items`, `PUT /api/items/{id}`, `DELETE /api/items/{id}` |
 | 14 | `pages/eco-dashboard.html` | User | 2-Column Comparison สถิติ CO2 ของตนเองเทียบกับสถิติรวมของระบบ | `GET /api/eco-stats/me`, `GET /api/eco-stats` |
-| 15 | `pages/profile.html` | User | แก้ไขข้อมูลส่วนตัว ที่อยู่ และฟอร์มเปลี่ยนรหัสผ่าน | `GET /api/me`, `PUT /api/me`, `POST /api/change-password` |
+| 15 | `pages/profile.html` | User | แก้ไขข้อมูลส่วนตัว ที่อยู่ และฟอร์มเปลี่ยนรหัสผ่าน | `GET /api/me`, `PUT /api/users/{id}`, `POST /api/change-password` |
 | 16 | `staff/jobs.html` | Staff/Admin | ตารางงานช่าง แยกงานวันนี้ / งานในอนาคต / ประวัติงาน | `GET /api/staff/jobs` |
 | 17 | `staff/checklist.html` | Staff/Admin | Digital Checklist หน้างาน (เทียบรูป + เช็ค 4 ข้อ + ถ่ายรูปผนัง) | `GET /api/bookings/{id}/detail`, `POST /api/uploads`, `PUT /api/bookings/{id}/status` |
 | 18 | `admin/index.html` | Admin | Dashboard สรุปยอดสถิติภาพรวม คำสั่งจองล่าสุด | `GET /api/bookings`, `GET /api/items`, `GET /api/eco-stats` |
@@ -133,6 +138,9 @@ SHARED MODULES & DESIGN SYSTEM
 - **Database Engine**: PostgreSQL 16
 - **Schema Management**: SQLModel (`app/models.py`)
 - **Migration Framework**: Alembic 1.13+
-- **Lifecycle Integration**: เมื่อรัน Container ระบบจะเรียก `database.run_migrations()` ซึ่งสั่ง `alembic upgrade head` อัตโนมัติก่อนเข้าสู่ขั้นตอนการ Seed ข้อมูล
+- **Lifecycle Integration**: เมื่อเริ่มแอป ระบบจะเรียก `database.run_migrations()` เพื่อพยายาม `alembic upgrade head` ก่อน Seed ข้อมูล; หากล้มเหลวจะ log notice และลอง `create_all()` เป็น fallback
 - **Migration Versions**:
-  - `0001_initial_baseline.py`: Baseline เริ่มต้นครอบคลุมทั้ง 5 ตารางหลัก (`user`, `item`, `product`, `timeslot`, `booking`) พร้อม Foreign Keys และ Indexes
+  - `0001_initial_baseline.py`: สร้าง 5 ตารางหลัก (`user`, `item`, `product`, `timeslot`, `booking`), Foreign Keys และ indexes เริ่มต้น
+  - `0002_add_performance_indexes.py`: เพิ่ม indexes สำหรับการค้นหา user/item/booking/product และ composite index ของ timeslot
+- เมื่อเกิดข้อผิดพลาด `database.run_migrations()` จะ log notice แล้วลอง `SQLModel.metadata.create_all()` ซึ่งไม่แก้ schema ที่มีอยู่แล้ว และอาจทำให้ migration เวอร์ชันใหม่ยังไม่ถูก apply
+- ฐานข้อมูล production ที่ตรวจพบมีตารางอยู่ก่อนแต่ไม่มี Alembic version baseline ทำให้การสร้างตารางซ้ำล้มเหลว; ห้ามตีความข้อความ “Auto-upgrade” ว่ารับประกันว่า production schema ตรงกับ migration head

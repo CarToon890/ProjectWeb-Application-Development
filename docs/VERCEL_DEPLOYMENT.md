@@ -41,7 +41,8 @@
 1. ไปที่เมนู **Project Settings** -> **API**
 2. คัดลอกค่า:
    - **Project URL** (เช่น `https://abcdefghijklmnop.supabase.co`)
-   - **anon / public key** หรือ **service_role key** (แนะนำให้ใช้ service_role key สำหรับ backend upload)
+   - API key สำหรับ backend: ใช้ `SUPABASE_SERVICE_ROLE_KEY` (เก็บเป็น Vercel Environment Variable ฝั่ง server เท่านั้น) หรือ key ที่มี Storage policy อนุญาตให้อัปโหลด
+   - `anon` key เพียงอย่างเดียวไม่ได้ให้สิทธิ์เขียน Storage โดยอัตโนมัติ; ต้องตั้ง policy ให้เหมาะสม ห้ามเปิด policy เขียนแบบสาธารณะเพื่อแก้ปัญหาเฉพาะหน้า
 
 ---
 
@@ -51,7 +52,7 @@
    ```bash
    git add .
    git commit -m "feat: configure vercel serverless and supabase support"
-   git push origin main
+   git push origin master
    ```
 
 ---
@@ -73,7 +74,7 @@
 | `JWT_ALGORITHM` | `HS256` | อัลกอริทึมเข้ารหัส |
 | `JWT_EXPIRE_MINUTES` | `1440` | อายุ Token (นาที) |
 | `SUPABASE_URL` | `https://your-project.supabase.co` | URL ของ Supabase Project |
-| `SUPABASE_KEY` | `eyJhbGciOi...` | Supabase API Key (service_role หรือ anon) |
+| `SUPABASE_KEY` หรือ `SUPABASE_SERVICE_ROLE_KEY` | API key ของโปรเจกต์ | ใช้ฝั่ง backend เท่านั้น; ถ้าใช้ anon key ต้องมี Storage INSERT policy ที่เหมาะสม |
 | `SUPABASE_BUCKET` | `uploads` | ชื่อ Bucket ที่สร้างไว้ |
 
 6. กดปุ่ม **Deploy**
@@ -92,6 +93,8 @@
 5. ทดสอบเข้าสู่หน้าแอดมิน (`/admin/index.html`) หรือเจ้าหน้าที่ (`/staff/jobs.html`)
 6. ทดสอบการอัปโหลดรูปภาพในการประเมินเฟอร์นิเจอร์ หรือหน้าจัดการสินค้า
 
+การอัปโหลดใน backend ปัจจุบันรับ `image/jpeg`, `image/png`, `image/webp`, `image/gif` และจำกัดขนาด 5 MB ต่อไฟล์ รูปที่เก็บใน Supabase สร้าง public URL; รูปจึงอ่านได้โดยผู้ที่มี URL เมื่อ bucket เป็น public ตามคู่มือนี้ ส่วน local fallback เขียนไฟล์ใน `frontend/uploads` ซึ่งไม่ใช่ persistent storage สำหรับ Vercel serverless
+
 ---
 
 ## การแก้ไขปัญหาที่พบบ่อย (Troubleshooting)
@@ -101,8 +104,9 @@
 - ตรวจสอบว่าใน `DATABASE_URL` ขึ้นต้นด้วย `postgresql://`
 
 ### 2. Upload รูปภาพแล้วขึ้น Error 500
-- ตรวจสอบว่าได้สร้าง Storage Bucket ชื่อ `uploads` และเปิดเป็น **Public** แล้วหรือยัง
-- ตรวจสอบว่าได้ใส่ `SUPABASE_URL` และ `SUPABASE_KEY` ใน Vercel Environment Variables ถูกต้องหรือไม่
+- ตรวจสอบว่าได้สร้าง Storage Bucket ชื่อ `uploads` และตรวจการตั้งค่า Public access ตามความต้องการด้านการเปิดเผยรูป
+- ตรวจสอบว่าได้ใส่ `SUPABASE_URL` และ `SUPABASE_KEY` หรือ `SUPABASE_SERVICE_ROLE_KEY` ใน Vercel Environment Variables ถูกต้องหรือไม่ และ key มีสิทธิ์เขียน Storage
+- Backend จำกัดไฟล์ไว้ที่ 5 MB; หน้าแบบประเมินปัจจุบันยังแสดงข้อความ 10 MB จึงควรยึดข้อจำกัด backend เป็นจริงจนกว่าข้อความ UI จะถูกแก้
 
 ### 3. API Return 404
 - ตรวจสอบว่ามีไฟล์ `vercel.json` และโฟลเดอร์ `api/index.py` อยู่ที่ root ของโปรเจกต์บน GitHub หรือไม่

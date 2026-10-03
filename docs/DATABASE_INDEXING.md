@@ -12,7 +12,7 @@
 |---|---|---|
 | **หน้าประวัติการจองของผู้ใช้** (`GET /bookings`) | `SELECT * FROM booking WHERE user_id = :user_id` | ต้องสแกนทุกแถวเพื่อหารายการของ user คนเดียว (เหมือนตัวอย่าง Lab 01b) |
 | **หน้าของเก่าที่ลงทะเบียน** (`GET /items`, `GET /eco-stats/me`) | `SELECT * FROM item WHERE user_id = :user_id` | ต้องสแกนทุกแถวในตาราง item |
-| **หน้าเลือกรอบเวลานัดหมาย** (`GET /timeslots`) | `SELECT * FROM timeslot WHERE is_available = true AND datetime > NOW() ORDER BY datetime` | ต้องกรองสถานะ + กรองช่วงเวลา + เสียเวลาทำ **Quicksort** ทุกครั้งที่เรียก |
+| **หน้าเลือกรอบเวลานัดหมาย** (`GET /timeslots`) | กรอง `is_available`, เวลาปัจจุบัน และ `ORDER BY datetime` | หากไม่มี index ที่เหมาะสม planner อาจเลือก scan และ sort; แผนจริงขึ้นกับจำนวนข้อมูลและสถิติของ PostgreSQL ไม่ได้ยืนยันว่าจะใช้ Quicksort ทุกครั้ง |
 | **หน้าร้านค้า/แคตตาล็อกสินค้า** (`GET /products?category=...`) | `SELECT * FROM product WHERE category = :category` | ต้องสแกนทุกแถวเพื่อหาตามหมวดหมู่ |
 | **งานของช่างและการดูรายละเอียดการจอง** (`GET /staff/jobs`) | `JOIN timeslot ON booking.timeslot_id = timeslot.id` | การเชื่อมตาราง Foreign Key ช้าลงเมื่อตารางมีขนาดใหญ่ |
 
@@ -72,7 +72,9 @@ CREATE INDEX IF NOT EXISTS ix_booking_timeslot_id ON booking (timeslot_id);
 
 ---
 
-## 5. การทดสอบและเปรียบเทียบผลลัพธ์ (Verification ด้วย EXPLAIN ANALYZE)
+## 5. Query สำหรับตรวจแผน (EXPLAIN ANALYZE)
+
+ส่วนนี้เป็น query สำหรับให้ผู้ดูแลรันตรวจสอบ ไม่ใช่ผล benchmark ที่บันทึกจากฐานข้อมูลจริงใน repository นี้ ผลลัพธ์อาจต่างกันตามจำนวนแถว, statistics, PostgreSQL version และ cost settings; อย่าสรุปว่า planner จะเลือก index เสมอ โดยเฉพาะตารางขนาดเล็ก
 
 ### เคสที่ 1: การค้นหารอบเวลาว่าง (`Timeslot`)
 
@@ -83,12 +85,8 @@ WHERE is_available = true AND datetime > NOW()
 ORDER BY datetime;
 ```
 
-* **ก่อนมี Index:**
-  * Plan: `Seq Scan on timeslot` + `Sort: Sort Method: quicksort`
-  * สาเหตุ: Database ต้องอ่านข้อมูลทั้งหมดในตารางและนำมากรอง จากนั้นต้องส่งต่อให้ CPU ทำการ Sort เรียงวันที่
-* **หลังมี Index (`ix_timeslot_available_datetime`):**
-  * Plan: `Index Scan using ix_timeslot_available_datetime on timeslot`
-  * ผลลัพธ์: **ไม่มีขั้นตอน Sort เกิดขึ้น** เพราะ B-Tree จัดเรียงตามลำดับ `(is_available, datetime)` ให้อยู่แล้ว ข้อมูลถูกดึงตามลำดับของ Index ทันที
+* **สิ่งที่คาดหวัง:** เมื่อข้อมูลและสถิติเหมาะสม planner อาจใช้ `ix_timeslot_available_datetime` และอาจเลี่ยง Sort ได้ เพราะ `is_available` เป็นคอลัมน์นำและ `datetime` เป็นคอลัมน์ถัดไป
+* **ผลที่วัดจริง:** ยังไม่มี output ของ `EXPLAIN ANALYZE` ก่อน/หลังแนบในเอกสารนี้ จึงไม่รายงานชนิด scan หรือเวลาเป็นผลที่ยืนยันแล้ว
 
 ### เคสที่ 2: การค้นหาการจองตามผู้ใช้ (`Booking`)
 
@@ -97,5 +95,5 @@ EXPLAIN ANALYZE
 SELECT * FROM booking WHERE user_id = 1;
 ```
 
-* **ก่อนมี Index:** `Seq Scan on booking (Filter: user_id = 1)`
-* **หลังมี Index:** `Bitmap Index Scan on ix_booking_user_id` / `Index Scan` ดึงเฉพาะแถวของลูกค้ารายนั้นได้ทันที
+* **สิ่งที่คาดหวัง:** planner อาจใช้ `ix_booking_user_id` หากต้นทุนต่ำกว่าการอ่านตาราง
+* **ผลที่วัดจริง:** ยังไม่มี output ของ `EXPLAIN ANALYZE` ก่อน/หลังแนบในเอกสารนี้
