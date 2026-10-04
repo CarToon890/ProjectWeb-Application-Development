@@ -17,6 +17,11 @@
 
 ## 2. สถาปัตยกรรมระบบและเทคโนโลยี (Tech Stack & Architecture)
 
+เอกสารแผนภาพและสถานะสถาปัตยกรรมฉบับเต็ม:
+
+- [Microservices Architecture](docs/MICROSERVICES_ARCHITECTURE.md) — แยกสิ่งที่ใช้งานอยู่ (modular monolith) ออกจากแผนการแยก microservices ในอนาคต
+- [Technology Stack Diagram](docs/TECHNOLOGY_STACK.md) — technology stack และเส้นทาง runtime ของ local/Vercel
+
 | ส่วนของระบบ (Layer) | เทคโนโลยี / มาตรฐานที่เลือกใช้ |
 |---|---|
 | **Frontend Framework** | Vanilla HTML5, CSS3, Modern JavaScript (ES6+) เรียก API ด้วย `fetch()` |
@@ -163,6 +168,8 @@ ProjectWeb-Application-Development/
 │   │   └── users.html           # จัดการรายชื่อผู้ใช้และปรับเปลี่ยนสิทธิ์ (Role: user / staff / admin)
 │   └── uploads/                 # ไดเรกทอรีเก็บรูปภาพที่อัปโหลด
 ├── docs/
+│   ├── MICROSERVICES_ARCHITECTURE.md # สถาปัตยกรรมปัจจุบันและเป้าหมาย microservices
+│   ├── TECHNOLOGY_STACK.md          # แผนภาพ technology stack
 │   └── PAGE-PLAN.md             # รายละเอียดแผนผังหน้าเว็บและฟังก์ชันของระบบ
 ├── docker-compose.yml
 ├── .env.example

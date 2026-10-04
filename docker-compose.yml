@@ -7,6 +7,7 @@ services:
       - ./backend/alembic:/app/alembic
       - ./backend/alembic.ini:/app/alembic.ini
       - ./frontend:/app/frontend
+      - uploads_data:/app/frontend/uploads
     env_file: .env
     depends_on:
       db:
@@ -15,13 +16,13 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_USER: appuser
-      POSTGRES_PASSWORD: apppassword
-      POSTGRES_DB: appdb
+      POSTGRES_USER: ${POSTGRES_USER:-appuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-apppassword}
+      POSTGRES_DB: ${POSTGRES_DB:-appdb}
     volumes: [db_data:/var/lib/postgresql/data]
     ports: ["5432:5432"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appuser} -d ${POSTGRES_DB:-appdb}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -36,3 +37,4 @@ services:
 
 volumes:
   db_data:
+  uploads_data:
