@@ -73,3 +73,50 @@ class Booking(SQLModel, table=True):
         ),
     )
 
+
+class MarketListing(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    seller_id: int = Field(foreign_key="user.id", index=True)
+    title: str
+    furniture_type: str
+    condition: str
+    description: str
+    price: int
+    image_url: Optional[str] = None
+    status: str = Field(default="available", index=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class MarketChat(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    listing_id: int = Field(foreign_key="marketlisting.id", index=True)
+    buyer_id: int = Field(foreign_key="user.id", index=True)
+    seller_id: int = Field(foreign_key="user.id", index=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class MarketMessage(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    chat_id: int = Field(foreign_key="marketchat.id", index=True)
+    sender_id: int = Field(foreign_key="user.id", index=True)
+    body: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class MarketOrder(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    listing_id: int = Field(foreign_key="marketlisting.id", index=True)
+    buyer_id: int = Field(foreign_key="user.id", index=True)
+    seller_id: int = Field(foreign_key="user.id", index=True)
+    item_price: int
+    shipping_fee: int
+    address: str
+    status: str = Field(default="awaiting_payment", index=True)
+    payment_proof_url: Optional[str] = None
+    rejection_reason: Optional[str] = None
+    carrier: Optional[str] = None
+    tracking_number: Optional[str] = None
+    refund_reason: Optional[str] = None
+    refund_proof_url: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+

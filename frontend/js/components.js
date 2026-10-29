@@ -28,6 +28,7 @@ const CUSTOMER_NAV_LINKS = [
   { key: "assess", label: "ประเมินของเก่า", icon: "clipboard-list", path: "pages/assessment-form.html" },
   { key: "myitems", label: "ของเก่าของฉัน", icon: "archive", path: "pages/my-items.html" },
   { key: "products", label: "แคตตาล็อกสินค้า", icon: "shopping-bag", path: "pages/products.html" },
+  { key: "market", label: "ตลาดมือสอง", icon: "store", path: "pages/marketplace.html" },
   { key: "bookings", label: "การจองของฉัน", icon: "calendar-check", path: "pages/booking-status.html" },
   { key: "eco", label: "Eco Dashboard", icon: "leaf", path: "pages/eco-dashboard.html" },
   { key: "profile", label: "โปรไฟล์", icon: "user", path: "pages/profile.html" },
