@@ -13,7 +13,6 @@ const PRODUCT_FALLBACK_PHOTOS = {
   wardrobe: "photo-1595428774223-ef52624120d2",
   shelf: "photo-1538688423619-a81d3f23454b",
 }
-
 function getProductFallbackImage(category, width = 400) {
   const photo = PRODUCT_FALLBACK_PHOTOS[category] || PRODUCT_FALLBACK_PHOTOS.sofa
   return `https://images.unsplash.com/${photo}?auto=format&fit=crop&w=${width}&q=80`
@@ -324,20 +323,11 @@ function confirmDialog(message, { confirmLabel = "ยืนยัน", cancelLab
 }
 
 // ---------- Dark Mode ----------
-function initTheme() {
-  const saved = localStorage.getItem("theme")
-  if (saved) {
-    document.documentElement.setAttribute("data-theme", saved)
-  } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-    document.documentElement.setAttribute("data-theme", "dark")
-  }
-}
-
 function toggleTheme() {
   const current = document.documentElement.getAttribute("data-theme")
   const next = current === "dark" ? "light" : "dark"
   document.documentElement.setAttribute("data-theme", next)
-  localStorage.setItem("theme", next)
+  try { localStorage.setItem("theme", next) } catch (_) { /* Storage may be unavailable. */ }
   if (typeof lucide !== "undefined") lucide.createIcons({ nameAttr: "data-lucide" })
 }
 
@@ -383,12 +373,9 @@ function initRipple() {
 
 // ---------- Init Page ----------
 function initPage() {
-  initTheme()
   initScrollAnimations()
   initRipple()
   if (typeof lucide !== "undefined") {
     lucide.createIcons({ nameAttr: "data-lucide" })
   }
 }
-
-initTheme()
