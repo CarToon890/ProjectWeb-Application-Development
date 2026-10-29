@@ -26,14 +26,14 @@ class MessageIn(BaseModel):
 class OrderIn(BaseModel):
     shipping_fee: int = PField(ge=0)
     address: str = PField(min_length=5, max_length=1000)
-    payment_proof_url: str
+    payment_proof_url: str = PField(min_length=1)
 
 class DecisionIn(BaseModel):
     reason: Optional[str] = None
 
 class ShipmentIn(BaseModel):
-    carrier: str
-    tracking_number: str
+    carrier: str = PField(min_length=1, max_length=120)
+    tracking_number: str = PField(min_length=1, max_length=120)
 
 class RefundIn(BaseModel):
     reason: str
@@ -93,11 +93,14 @@ def messages(chat_id:int,session:Session=Depends(get_session),user:User=Depends(
 
 @router.post("/market/chats/{chat_id}/messages",status_code=201)
 def send_message(chat_id:int,data:MessageIn,session:Session=Depends(get_session),user:User=Depends(get_current_user)):
-    accessible_chat(chat_id,session,user); row=MarketMessage(chat_id=chat_id,sender_id=user.id,body=data.body.strip()); session.add(row); session.commit(); session.refresh(row); return row
+    accessible_chat(chat_id,session,user)
+    body=data.body.strip()
+    if not body: fail(422,"ข้อความห้ามเว้นว่าง")
+    row=MarketMessage(chat_id=chat_id,sender_id=user.id,body=body); session.add(row); session.commit(); session.refresh(row); return row
 
 @router.post("/market/listings/{listing_id}/orders",status_code=201)
 def create_order(listing_id:int,data:OrderIn,session:Session=Depends(get_session),user:User=Depends(get_current_user)):
-    listing=session.get(MarketListing,listing_id)
+    listing=session.exec(select(MarketListing).where(MarketListing.id==listing_id).with_for_update()).first()
     if not listing or listing.status!="available": fail(409,"ประกาศนี้ไม่พร้อมขายแล้ว")
     if listing.seller_id==user.id: fail(400,"ซื้อประกาศของตนเองไม่ได้")
     listing.status="reserved"; order=MarketOrder(listing_id=listing.id,buyer_id=user.id,seller_id=listing.seller_id,item_price=listing.price,shipping_fee=data.shipping_fee,address=data.address,payment_proof_url=data.payment_proof_url)
@@ -133,7 +136,10 @@ def received(order_id:int,session:Session=Depends(get_session),user:User=Depends
     if not order: fail(404,"ไม่พบคำสั่งซื้อ")
     if order.buyer_id!=user.id: fail(403,"เฉพาะผู้ซื้อยืนยันรับได้")
     if order.status!="shipped": fail(409,"คำสั่งซื้อยังไม่ได้จัดส่ง")
-    order.status="completed"; session.add(order); session.commit(); session.refresh(order); return order
+    order.status="completed"
+    listing=session.get(MarketListing,order.listing_id)
+    listing.status="sold"
+    session.add(order); session.add(listing); session.commit(); session.refresh(order); return order
 
 @router.put("/market/orders/{order_id}/refund")
 def refund(order_id:int,data:RefundIn,session:Session=Depends(get_session),user:User=Depends(get_current_user)):
