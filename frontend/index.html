@@ -239,7 +239,7 @@
       .then(stats => {
         document.getElementById('stat-items').textContent = Number(stats.total_items).toLocaleString()
         document.getElementById('stat-co2').textContent = Number(stats.total_co2_saved_kg).toFixed(1)
-        const trees = Math.max(1, Math.round(stats.total_co2_saved_kg / 18))
+        const trees = Math.round(stats.total_co2_saved_kg / 18)
         document.getElementById('stat-trees').textContent = Number(trees).toLocaleString()
       })
       .catch(() => {
