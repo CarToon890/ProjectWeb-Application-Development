@@ -132,7 +132,8 @@
       saveBtn.innerHTML = "กำลังบันทึก..."
 
       try {
-        await updateMe({
+        const currentUser = await getMe()
+        await updateUser(currentUser.id, {
           email: profileForm.email.value.trim(),
           full_name: profileForm.full_name.value.trim(),
           phone: profileForm.phone.value.trim() || null,

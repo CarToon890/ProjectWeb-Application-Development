@@ -72,7 +72,7 @@
     .condition-btn.selected i, .condition-btn.selected svg { color: var(--accent); }
     .condition-btn.selected .cond-desc { color: var(--accent-ink); opacity: 0.9; }
 
-    input[name="furniture_type"], input[name="condition"] { display: none; }
+    .selection-error { color: var(--danger); font-size: 13px; margin-top: var(--sp-2); }
 
     .price-preview-card {
       background: linear-gradient(135deg, var(--accent-bg) 0%, rgba(5, 150, 105, 0.08) 100%);
@@ -131,16 +131,18 @@
         <form id="assessment-form">
           <!-- 1. ประเภทเฟอร์นิเจอร์ -->
           <div class="field">
-            <label>1. เลือกประเภทเฟอร์นิเจอร์ <span style="color: var(--danger);">*</span></label>
-            <div class="type-grid" id="type-grid"></div>
-            <input type="text" name="furniture_type" id="furniture_type" required />
+            <label id="type-label">1. เลือกประเภทเฟอร์นิเจอร์ <span style="color: var(--danger);">*</span></label>
+            <div class="type-grid" id="type-grid" role="group" aria-labelledby="type-label" aria-describedby="type-error"></div>
+            <input type="hidden" name="furniture_type" id="furniture_type" />
+            <p class="selection-error" id="type-error" role="alert" hidden></p>
           </div>
 
           <!-- 2. สภาพสินค้า -->
           <div class="field">
-            <label>2. เลือกระดับสภาพสินค้า <span style="color: var(--danger);">*</span></label>
-            <div class="condition-grid" id="condition-grid"></div>
-            <input type="text" name="condition" id="condition" required />
+            <label id="condition-label">2. เลือกระดับสภาพสินค้า <span style="color: var(--danger);">*</span></label>
+            <div class="condition-grid" id="condition-grid" role="group" aria-labelledby="condition-label" aria-describedby="condition-error"></div>
+            <input type="hidden" name="condition" id="condition" />
+            <p class="selection-error" id="condition-error" role="alert" hidden></p>
           </div>
 
           <!-- Price Preview -->
@@ -219,6 +221,8 @@
     const conditionGrid = document.getElementById("condition-grid")
     const typeInput = document.getElementById("furniture_type")
     const conditionInput = document.getElementById("condition")
+    const typeError = document.getElementById("type-error")
+    const conditionError = document.getElementById("condition-error")
     const pricePreview = document.getElementById("price-preview")
     const pricePreviewValue = document.getElementById("price-preview-value")
 
@@ -235,34 +239,38 @@
     }
 
     typeGrid.innerHTML = FURNITURE_TYPES.map(([value, label, icon]) => `
-      <div class="type-btn" data-value="${value}">
+      <button type="button" class="type-btn" data-value="${value}" aria-pressed="false">
         <i data-lucide="${icon}"></i>
         <span>${label}</span>
-      </div>
+      </button>
     `).join("")
 
     typeGrid.querySelectorAll(".type-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
-        typeGrid.querySelectorAll(".type-btn").forEach((b) => b.classList.remove("selected"))
+        typeGrid.querySelectorAll(".type-btn").forEach((b) => { b.classList.remove("selected"); b.setAttribute("aria-pressed", "false") })
         btn.classList.add("selected")
+        btn.setAttribute("aria-pressed", "true")
         typeInput.value = btn.dataset.value
+        typeError.hidden = true
         updatePricePreview()
       })
     })
 
     conditionGrid.innerHTML = CONDITIONS.map(([value, label, icon, desc]) => `
-      <div class="condition-btn" data-value="${value}">
+      <button type="button" class="condition-btn" data-value="${value}" aria-pressed="false">
         <i data-lucide="${icon}"></i>
         <span>${label}</span>
         <span class="cond-desc">${desc}</span>
-      </div>
+      </button>
     `).join("")
 
     conditionGrid.querySelectorAll(".condition-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
-        conditionGrid.querySelectorAll(".condition-btn").forEach((b) => b.classList.remove("selected"))
+        conditionGrid.querySelectorAll(".condition-btn").forEach((b) => { b.classList.remove("selected"); b.setAttribute("aria-pressed", "false") })
         btn.classList.add("selected")
+        btn.setAttribute("aria-pressed", "true")
         conditionInput.value = btn.dataset.value
+        conditionError.hidden = true
         updatePricePreview()
       })
     })
@@ -315,14 +323,13 @@
       errorMsg.style.display = "none"
       successMsg.style.display = "none"
 
-      if (!typeInput.value) {
-        errorMsg.textContent = "กรุณาเลือกประเภทเฟอร์นิเจอร์"
-        errorMsg.style.display = "flex"
-        return
-      }
-      if (!conditionInput.value) {
-        errorMsg.textContent = "กรุณาเลือกระดับสภาพสินค้า"
-        errorMsg.style.display = "flex"
+      typeError.textContent = "กรุณาเลือกประเภทเฟอร์นิเจอร์"
+      conditionError.textContent = "กรุณาเลือกระดับสภาพสินค้า"
+      typeError.hidden = !!typeInput.value
+      conditionError.hidden = !!conditionInput.value
+      if (!typeInput.value || !conditionInput.value) {
+        const firstMissingGrid = !typeInput.value ? typeGrid : conditionGrid
+        firstMissingGrid.querySelector("button").focus()
         return
       }
       if (photoUploading) {
