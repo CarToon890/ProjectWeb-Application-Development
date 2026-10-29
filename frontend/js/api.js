@@ -205,3 +205,18 @@ async function getEcoStats() {
 async function getEcoStatsMe() {
   return apiFetch("/api/eco-stats/me")
 }
+
+// ---------- User marketplace ----------
+async function getMarketListings(q = "", furnitureType = "") {
+  const params = new URLSearchParams(); if (q) params.set("q", q); if (furnitureType) params.set("furniture_type", furnitureType)
+  return apiFetch(`/api/market/listings?${params}`)
+}
+async function createMarketListing(data) { return apiFetch("/api/market/listings", jsonBody("POST", data)) }
+async function getMyMarketListings() { return apiFetch("/api/market/listings/mine") }
+async function getMarketListing(id) { return apiFetch(`/api/market/listings/${id}`) }
+async function startMarketChat(id) { return apiFetch(`/api/market/listings/${id}/chats`, { method: "POST" }) }
+async function getMarketChats() { return apiFetch("/api/market/chats") }
+async function getMarketMessages(id) { return apiFetch(`/api/market/chats/${id}/messages`) }
+async function sendMarketMessage(id, body) { return apiFetch(`/api/market/chats/${id}/messages`, jsonBody("POST", { body })) }
+async function createMarketOrder(id, data) { return apiFetch(`/api/market/listings/${id}/orders`, jsonBody("POST", data)) }
+async function getMarketOrders() { return apiFetch("/api/market/orders") }

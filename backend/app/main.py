@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 
 from app.database import create_db_and_tables, engine
-from app.routers import auth, bookings, eco, items, products, staff, uploads, users
+from app.routers import auth, bookings, eco, items, market, products, staff, uploads, users
 from app.seed import seed_data
 
 
@@ -49,6 +49,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(users.router, prefix="/api", tags=["users"])
 app.include_router(items.router, prefix="/api", tags=["items"])
+app.include_router(market.router, prefix="/api", tags=["market"])
 app.include_router(products.router, prefix="/api", tags=["products"])
 app.include_router(bookings.router, prefix="/api", tags=["bookings"])
 app.include_router(eco.router, prefix="/api", tags=["eco"])
