@@ -24,7 +24,9 @@ def get_db_url(raw_url: str):
     clean_url = clean_url.strip().strip('"').strip("'")
 
     if clean_url.startswith("postgres://"):
-        clean_url = clean_url.replace("postgres://", "postgresql://", 1)
+        clean_url = clean_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif clean_url.startswith("postgresql://"):
+        clean_url = clean_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
     try:
         if "://" in clean_url and "@" in clean_url:
@@ -65,7 +67,7 @@ def get_db_url(raw_url: str):
                 query_dict.setdefault("sslmode", "require")
 
             return URL.create(
-                drivername="postgresql",
+                drivername="postgresql+psycopg2",
                 username=urllib.parse.unquote(user) if user else None,
                 password=urllib.parse.unquote(pwd) if pwd else None,
                 host=host,
@@ -90,20 +92,13 @@ DATABASE_URL = get_db_url(RAW_DATABASE_URL)
 
 ENGINE_ERROR = None
 
-try:
-    engine = create_engine(
-        DATABASE_URL,
-        echo=False,
-        pool_pre_ping=True,
-        pool_recycle=300,
-    )
-except Exception as e:
-    ENGINE_ERROR = str(e)
-    print(f"[Engine Creation Notice] Primary engine error ({e}), falling back...")
-    engine = create_engine(
-        "sqlite:////tmp/fallback.db",
-        echo=False,
-    )
+# Never switch to an isolated, ephemeral database on configuration errors.
+engine = create_engine(
+    DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,
+    pool_recycle=300,
+)
 
 
 

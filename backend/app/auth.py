@@ -34,9 +34,9 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
     return pwd_context.verify(plain_password, password_hash)
 
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: int, username: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
-    payload = {"sub": str(user_id), "exp": expire}
+    payload = {"sub": str(user_id), "username": username, "exp": expire}
     return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
 
@@ -55,7 +55,7 @@ def get_current_user(
         raise unauthorized
 
     user = session.get(User, user_id)
-    if user is None:
+    if user is None or not payload.get("username") or payload["username"] != user.username:
         raise unauthorized
     return user
 

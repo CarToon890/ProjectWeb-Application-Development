@@ -59,7 +59,7 @@ def login(data: LoginRequest, session: Session = Depends(get_session)):
     if user is None or not verify_password(data.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "username หรือ password ไม่ถูกต้อง")
 
-    token = create_access_token(user.id)
+    token = create_access_token(user.id, user.username)
     return TokenResponse(access_token=token)
 
 
